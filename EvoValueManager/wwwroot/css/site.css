@@ -1,0 +1,52 @@
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+.evo-margin {
+    margin: 10px;
+}
+
+.evo-details-margin {
+    margin-top: 30px;
+    margin-left: 10px;
+}
+
+.evo-flex {
+    display: flex;
+    align-items: flex-end;
+}
+
+.evo-dropdown {
+    background-color: #f5f5f5;
+    width: fit-content;
+    block-size: fit-content;
+}
+
+.evo-character-label {
+    text-align-last: end;
+    width: 150px;
+}
+
+.evo-challenge-label {
+    text-align-last: end;
+    width: 200px;
+}

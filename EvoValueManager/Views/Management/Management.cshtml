@@ -1,0 +1,90 @@
+﻿@using EvoCharacterManager.Models.ViewModels
+@model ManagementPageViewModel
+
+@{
+    ViewBag.Title = "Vezetés/Fejlesztés";
+}
+
+<h2>Vezetés/Fejlesztés</h2>
+
+<div class="evo-flex">
+    @using (Html.BeginForm("Assign", "Management", FormMethod.Post))
+    {
+        @Html.DropDownListFor(m => m.SelectedAssignedId, (SelectList)Model.SelectableAssignedValues,
+                new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
+    }
+
+    @using (Html.BeginForm("CharacterSelection", "Management", FormMethod.Post))
+    {
+        @Html.HiddenFor(m => m.SelectedAssignedId)
+        @Html.DropDownListFor(m => m.SelectedCharacterId, (SelectList)Model.SelectableCharacters, "Válassz egy csapattagot",
+                new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
+    }
+
+    @if (Model.SelectableChallenges != null)
+    {
+        @using (Html.BeginForm("ChallengeSelection", "Management", FormMethod.Post))
+        {
+            @Html.HiddenFor(m => m.SelectedAssignedId)
+            @Html.HiddenFor(m => m.SelectedCharacterId)
+            @Html.DropDownListFor(m => m.SelectedChallengeId, (SelectList)Model.SelectableChallenges, "Válassz egy kihívást",
+                    new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
+        }
+    }
+</div>
+
+@if (Model.SelectedCharacter != null && Model.SelectedChallenge != null)
+{
+    <div class="evo-details-margin">
+        <h3>Elvárások</h3>
+        <div class="evo-flex">
+            <p class="evo-character-label"><strong>Merészség:</strong></p>
+            <p style="margin-left: 10px;">@Model.SelectedCharacter.Bravery @Model.SelectedChallenge.RequiredBravery</p>
+            <p style="margin-left: 10px; font-weight: bold">
+                @(Model.SelectedCharacter.Bravery - Model.SelectedChallenge.RequiredBravery > 0 ? "" : "!!!")
+            </p>
+        </div>
+        <div class="evo-flex">
+            <p class="evo-character-label"><strong>Megbízhatóság:</strong></p>
+            <p style="margin-left: 10px;">@Model.SelectedCharacter.Trust @Model.SelectedChallenge.RequiredTrust</p>
+            <p style="margin-left: 10px; font-weight: bold">
+                @(Model.SelectedCharacter.Trust - Model.SelectedChallenge.RequiredTrust > 0 ? "" : "!!!")
+            </p>
+        </div>
+        <div class="evo-flex">
+            <p class="evo-character-label"><strong>Jelenlét:</strong></p>
+            <p style="margin-left: 10px;">@Model.SelectedCharacter.Presence @Model.SelectedChallenge.RequiredPresence</p>
+            <p style="margin-left: 10px; font-weight: bold">
+                @(Model.SelectedCharacter.Presence - Model.SelectedChallenge.RequiredPresence > 0 ? "" : "!!!")
+            </p>
+        </div>
+    </div>
+
+    <div class="evo-details-margin">
+        <h3>Fejlődési lehetőségek</h3>
+        <div class="evo-flex">
+            <p class="evo-character-label"><strong>Merészség:</strong></p>
+            <p style="margin-left: 10px;">@Model.SelectedCharacter.Bravery @Model.SelectedChallenge.GainableBravery</p>
+        </div>
+        <div class="evo-flex">
+            <p class="evo-character-label"><strong>Megbízhatóság:</strong></p>
+            <p style="margin-left: 10px;">@Model.SelectedCharacter.Trust @Model.SelectedChallenge.GainableTrust</p>
+        </div>
+        <div class="evo-flex">
+            <p class="evo-character-label"><strong>Jelenlét:</strong></p>
+            <p style="margin-left: 10px;">@Model.SelectedCharacter.Presence @Model.SelectedChallenge.GainablePresence</p>
+        </div>
+    </div>
+
+    @using (Html.BeginForm("ManageChallenge", "Management", FormMethod.Post))
+    {
+        <div class="evo-details-margin">
+            @Html.HiddenFor(m => m.SelectedAssignedId)
+            @Html.HiddenFor(m => m.SelectedCharacterId)
+            @Html.HiddenFor(m => m.SelectedChallengeId)
+            <button type="submit" class="btn btn-primary">
+                @(Model.SelectedAssignedId == 1 ? "Kihívás felvétele" : "Lezárás")
+            </button>
+        </div>
+    }
+}

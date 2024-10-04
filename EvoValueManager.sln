@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35122.118
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvoValueManager", "EvoValueManager\EvoValueManager.csproj", "{028A97A7-0991-41AA-A18F-94DF570440C7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{028A97A7-0991-41AA-A18F-94DF570440C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{028A97A7-0991-41AA-A18F-94DF570440C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{028A97A7-0991-41AA-A18F-94DF570440C7}.Debug|x64.ActiveCfg = Debug|x64
+		{028A97A7-0991-41AA-A18F-94DF570440C7}.Debug|x64.Build.0 = Debug|x64
+		{028A97A7-0991-41AA-A18F-94DF570440C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{028A97A7-0991-41AA-A18F-94DF570440C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{028A97A7-0991-41AA-A18F-94DF570440C7}.Release|x64.ActiveCfg = Release|x64
+		{028A97A7-0991-41AA-A18F-94DF570440C7}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {208C18D3-0135-46CE-8352-58BA2B1139FF}
+	EndGlobalSection
+EndGlobal
