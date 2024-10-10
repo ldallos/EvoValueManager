@@ -10,8 +10,8 @@ namespace EvoCharacterManager.Models.Entities
         [Column("title")]
         public string Title { get; set; } = string.Empty;
 
-        [Column("required_bravery")]
-        public int? RequiredBravery { get; set; }
+        [Column("required_bravery_1")]
+        public int? RequiredBravery1 { get; set; }
 
         [Column("required_trust")]
         public int? RequiredTrust { get; set; }
