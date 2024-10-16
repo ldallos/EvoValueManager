@@ -18,5 +18,11 @@ namespace EvoCharacterManager.Models.Entities
 
         [Column("presence")]
         public int Presence { get; set; }
+        
+        [Column("growth")]
+        public int Growth { get; set; }
+        
+        [Column("care")]
+        public int Care { get; set; }
     }
 }

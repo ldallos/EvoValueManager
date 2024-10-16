@@ -11,11 +11,19 @@
         public int? RequiredTrust { get; set; }
 
         public int? RequiredPresence { get; set; }
+        
+        public int? RequiredGrowth { get; set; }
+        
+        public int? RequiredCare { get; set; }
 
         public int? GainableBravery { get; set; }
 
         public int? GainableTrust { get; set; }
 
         public int? GainablePresence { get; set; }
+        
+        public int? GainableGrowth { get; set; }
+        
+        public int? GainableCare { get; set; }
     }
 }

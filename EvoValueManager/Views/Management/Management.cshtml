@@ -74,8 +74,15 @@
             <p class="evo-character-label"><strong>Jelenlét:</strong></p>
             <p style="margin-left: 10px;">@Model.SelectedCharacter.Presence @Model.SelectedChallenge.GainablePresence</p>
         </div>
+        <div class="evo-flex">
+            <p class="evo-character-label"><strong>Gondoskodás:</strong></p>
+            <p style="margin-left: 10px;">@Model.SelectedCharacter.Care @Model.SelectedChallenge.GainableCare</p>
+        </div>
+        <div class="evo-flex">
+            <p class="evo-character-label"><strong>Fejlődés:</strong></p>
+            <p style="margin-left: 10px;">@Model.SelectedCharacter.Growth @Model.SelectedChallenge.GainableGrowth</p>
+        </div>
     </div>
-
     @using (Html.BeginForm("ManageChallenge", "Management", FormMethod.Post))
     {
         <div class="evo-details-margin">

@@ -18,6 +18,12 @@ namespace EvoCharacterManager.Models.Entities
 
         [Column("required_presence")]
         public int? RequiredPresence { get; set; }
+        
+        [Column("required_growth")]
+        public int? RequiredGrowth { get; set; }
+        
+        [Column("required_care")]
+        public int? RequiredCare { get; set; }
 
         [Column("gainable_bravery")]
         public int? GainableBravery { get; set; }
@@ -27,5 +33,11 @@ namespace EvoCharacterManager.Models.Entities
 
         [Column("gainable_presence")]
         public int? GainablePresence { get; set; }
+        
+        [Column("gainable_growth")]
+        public int? GainableGrowth { get; set; }
+        
+        [Column("gainable_care")]
+        public int? GainableCare { get; set; }
     }
 }
