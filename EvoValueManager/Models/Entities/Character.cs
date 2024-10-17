@@ -10,19 +10,14 @@ namespace EvoCharacterManager.Models.Entities
         [Column("name")]
         public string Name { get; set; } = string.Empty;
 
-        [Column("bravery")]
-        public int Bravery { get; set; }
+        [Column("bravery")] public int Bravery { get; set; } = 0;
 
-        [Column("trust")]
-        public int Trust { get; set; }
+        [Column("trust")] public int Trust { get; set; } = 0;
 
-        [Column("presence")]
-        public int Presence { get; set; }
-        
-        [Column("growth")]
-        public int Growth { get; set; }
-        
-        [Column("care")]
-        public int Care { get; set; }
+        [Column("presence")] public int Presence { get; set; } = 0;
+
+        [Column("growth")] public int Growth { get; set; } = 0;
+
+        [Column("care")] public int Care { get; set; } = 0;
     }
 }

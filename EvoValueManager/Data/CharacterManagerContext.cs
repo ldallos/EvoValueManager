@@ -17,7 +17,7 @@ namespace EvoCharacterManager.Data
                 Characters?.Add(new Character { Name = "Jelen Volt Zsolt", Bravery = 15, Presence = 35, Trust = 20 });
 
                 Challenges?.Add(new Challenge { Title = "Demózás", GainableBravery = 10,
-                    RequiredBravery = 0, RequiredTrust = 0, RequiredPresence = 5 });
+                    RequiredBravery = 0, RequiredTrust = 100, RequiredPresence = 5 });
                 Challenges?.Add(new Challenge { Title = "Ügyféllátogatás", GainableTrust = 3,
                     RequiredBravery = 10, RequiredTrust = 0, RequiredPresence = 0 });
                 Challenges?.Add(new Challenge { Title = "Mentorálás", GainableTrust = 1, GainablePresence = 1,
