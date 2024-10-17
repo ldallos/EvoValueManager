@@ -66,6 +66,31 @@
                         @max = "100"
                     })
                 </div>
+
+                <div class="evo-flex">
+                    <p class="evo-challenge-label">
+                        <strong>Elvárt Gondoskodás:</strong>
+                    </p>
+                    @Html.TextBoxFor(m => Model.SelectedChallenge.RequiredCare, new
+                    {
+                        @class = "evo-margin",
+                        @type = "number",
+                        @min = "1",
+                        @max = "100"
+                    })
+                </div>
+                <div class="evo-flex">
+                    <p class="evo-challenge-label">
+                        <strong>Elvárt Jelenlét:</strong>
+                    </p>
+                    @Html.TextBoxFor(m => Model.SelectedChallenge.RequiredPresence, new
+                    {
+                        @class = "evo-margin",
+                        @type = "number",
+                        @min = "1",
+                        @max = "100"
+                    })
+                </div>
                 <div class="evo-flex">
                     <p class="evo-challenge-label">
                         <strong>Elvárt Megbízhatóság:</strong>
@@ -80,33 +105,9 @@
                 </div>
                 <div class="evo-flex">
                     <p class="evo-challenge-label">
-                        <strong>Elvárt Jelenlét:</strong>
+                        <strong>Elvárt Merészség:</strong>
                     </p>
-                    @Html.TextBoxFor(m => Model.SelectedChallenge.RequiredPresence, new
-                    {
-                        @class = "evo-margin",
-                        @type = "number",
-                        @min = "1",
-                        @max = "100"
-                    })
-                </div>
-                <div class="evo-flex">
-                    <p class="evo-challenge-label">
-                        <strong>Elvárt Jelenlét:</strong>
-                    </p>
-                    @Html.TextBoxFor(m => Model.SelectedChallenge.RequiredPresence, new
-                    {
-                        @class = "evo-margin",
-                        @type = "number",
-                        @min = "1",
-                        @max = "100"
-                    })
-                </div>
-                <div class="evo-flex">
-                    <p class="evo-challenge-label">
-                        <strong>Elvárt Jelenlét:</strong>
-                    </p>
-                    @Html.TextBoxFor(m => Model.SelectedChallenge.RequiredPresence, new
+                    @Html.TextBoxFor(m => Model.SelectedChallenge.RequiredBravery, new
                     {
                         @class = "evo-margin",
                         @type = "number",
