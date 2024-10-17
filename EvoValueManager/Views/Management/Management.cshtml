@@ -11,14 +11,14 @@
     @using (Html.BeginForm("Assign", "Management", FormMethod.Post))
     {
         @Html.DropDownListFor(m => m.SelectedAssignedId, (SelectList)Model.SelectableAssignedValues,
-                new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
+            new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
     }
 
     @using (Html.BeginForm("CharacterSelection", "Management", FormMethod.Post))
     {
         @Html.HiddenFor(m => m.SelectedAssignedId)
         @Html.DropDownListFor(m => m.SelectedCharacterId, (SelectList)Model.SelectableCharacters, "Válassz egy csapattagot",
-                new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
+            new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
     }
 
     @if (Model.SelectableChallenges != null)
@@ -28,7 +28,7 @@
             @Html.HiddenFor(m => m.SelectedAssignedId)
             @Html.HiddenFor(m => m.SelectedCharacterId)
             @Html.DropDownListFor(m => m.SelectedChallengeId, (SelectList)Model.SelectableChallenges, "Válassz egy kihívást",
-                    new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
+                new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
         }
     }
 </div>
@@ -37,52 +37,58 @@
 {
     <div class="evo-details-margin">
         <h3>Elvárások</h3>
-        <div class="evo-flex">
-            <p class="evo-character-label"><strong>Merészség:</strong></p>
-            <p style="margin-left: 10px;">@Model.SelectedCharacter.Bravery @Model.SelectedChallenge.RequiredBravery</p>
-            <p style="margin-left: 10px; font-weight: bold">
-                @(Model.SelectedCharacter.Bravery - Model.SelectedChallenge.RequiredBravery > 0 ? "" : "!!!")
-            </p>
-        </div>
-        <div class="evo-flex">
-            <p class="evo-character-label"><strong>Megbízhatóság:</strong></p>
-            <p style="margin-left: 10px;">@Model.SelectedCharacter.Trust @Model.SelectedChallenge.RequiredTrust</p>
-            <p style="margin-left: 10px; font-weight: bold">
-                @(Model.SelectedCharacter.Trust - Model.SelectedChallenge.RequiredTrust > 0 ? "" : "!!!")
-            </p>
-        </div>
-        <div class="evo-flex">
-            <p class="evo-character-label"><strong>Jelenlét:</strong></p>
-            <p style="margin-left: 10px;">@Model.SelectedCharacter.Presence @Model.SelectedChallenge.RequiredPresence</p>
-            <p style="margin-left: 10px; font-weight: bold">
-                @(Model.SelectedCharacter.Presence - Model.SelectedChallenge.RequiredPresence > 0 ? "" : "!!!")
-            </p>
-        </div>
+        @* Ez a kód végigmegy a propertyken, összehasonlítja a „Model.SelectedCharacter” értékeket (például Bravery) a „Model.SelectedChallenge” követelményekkel, a „GetProperty” és a „GetValue” segítségével hozzáfér az értékekhez, és „!!!” -t mutat, ha a követelmények nem teljesülnek. *@
+        @foreach (var trait in new[]
+                  {
+                      new { Label = "Fejlődés:", Property = "Growth" },
+                      new { Label = "Gondoskodás:", Property = "Care" },
+                      new { Label = "Jelenlét:", Property = "Presence" },
+                      new { Label = "Megbízhatóság:", Property = "Trust" },
+                      new { Label = "Merészség:", Property = "Bravery" }
+                  })
+        {
+            <div class="evo-flex">
+                <p class="evo-character-label">
+                    <strong>@trait.Label</strong>
+                </p>
+                <p style="margin-left: 10px;">
+                    @* pl.: Character.GetType().GetProperty("Bravery")!.GetValue("Béla") vagyis Béla Bravery értéke *@
+                    @Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)
+                    @Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge)
+                </p>
+                <p style="margin-left: 10px; font-weight: bold">
+                    @(Convert.ToInt32(Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)) -
+                    Convert.ToInt32(Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge)) >= 0
+                        ? ""
+                        : "!!!")
+                </p>
+            </div>
+        }
     </div>
 
     <div class="evo-details-margin">
         <h3>Fejlődési lehetőségek</h3>
-        <div class="evo-flex">
-            <p class="evo-character-label"><strong>Merészség:</strong></p>
-            <p style="margin-left: 10px;">@Model.SelectedCharacter.Bravery @Model.SelectedChallenge.GainableBravery</p>
-        </div>
-        <div class="evo-flex">
-            <p class="evo-character-label"><strong>Megbízhatóság:</strong></p>
-            <p style="margin-left: 10px;">@Model.SelectedCharacter.Trust @Model.SelectedChallenge.GainableTrust</p>
-        </div>
-        <div class="evo-flex">
-            <p class="evo-character-label"><strong>Jelenlét:</strong></p>
-            <p style="margin-left: 10px;">@Model.SelectedCharacter.Presence @Model.SelectedChallenge.GainablePresence</p>
-        </div>
-        <div class="evo-flex">
-            <p class="evo-character-label"><strong>Gondoskodás:</strong></p>
-            <p style="margin-left: 10px;">@Model.SelectedCharacter.Care @Model.SelectedChallenge.GainableCare</p>
-        </div>
-        <div class="evo-flex">
-            <p class="evo-character-label"><strong>Fejlődés:</strong></p>
-            <p style="margin-left: 10px;">@Model.SelectedCharacter.Growth @Model.SelectedChallenge.GainableGrowth</p>
-        </div>
+        @foreach (var trait in new[]
+                  {
+                      new { Label = "Fejlődés:", Property = "Growth" },
+                      new { Label = "Gondoskodás:", Property = "Care" },
+                      new { Label = "Jelenlét:", Property = "Presence" },
+                      new { Label = "Megbízhatóság:", Property = "Trust" },
+                      new { Label = "Merészség:", Property = "Bravery" }
+                  })
+        {
+            <div class="evo-flex">
+                <p class="evo-character-label">
+                    <strong>@trait.Label</strong>
+                </p>
+                <p style="margin-left: 10px;">
+                    @Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)
+                    @Model.SelectedChallenge.GetType().GetProperty("Gainable" + trait.Property)!.GetValue(Model.SelectedChallenge)
+                </p>
+            </div>
+        }
     </div>
+
     @using (Html.BeginForm("ManageChallenge", "Management", FormMethod.Post))
     {
         <div class="evo-details-margin">

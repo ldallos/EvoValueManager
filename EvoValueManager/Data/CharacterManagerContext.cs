@@ -12,16 +12,62 @@ namespace EvoCharacterManager.Data
             // You shall delete in a real environment!
             if (Program.UseInMemory && !MEMORY_RUN)
             {
-                Characters?.Add(new Character { Name = "Bátor Sándor", Bravery = 30, Presence = 10, Trust = 5 });
-                Characters?.Add(new Character { Name = "Bízom Balázs", Bravery = 5, Presence = 10, Trust = 50 });
-                Characters?.Add(new Character { Name = "Jelen Volt Zsolt", Bravery = 15, Presence = 35, Trust = 20 });
+                Characters?.Add(new Character
+                {
+                    Name = "Bátor Sándor",
+                    Bravery = 30,
+                    Presence = 10,
+                    Trust = 5,
+                    Care = 10,
+                    Growth = 5
+                });
+                Characters?.Add(new Character
+                {
+                    Name = "Bízom Balázs", 
+                    Bravery = 5, 
+                    Presence = 10, 
+                    Trust = 50,
+                    Care = 0,
+                    Growth = 15
+                });
+                Characters?.Add(new Character
+                {
+                    Name = "Jelen Volt Zsolt", 
+                    Bravery = 15, 
+                    Presence = 35, 
+                    Trust = 20,
+                    Care = 10,
+                    Growth = 10
+                });
 
-                Challenges?.Add(new Challenge { Title = "Demózás", GainableBravery = 10,
-                    RequiredBravery = 0, RequiredTrust = 100, RequiredPresence = 5 });
-                Challenges?.Add(new Challenge { Title = "Ügyféllátogatás", GainableTrust = 3,
-                    RequiredBravery = 10, RequiredTrust = 0, RequiredPresence = 0 });
-                Challenges?.Add(new Challenge { Title = "Mentorálás", GainableTrust = 1, GainablePresence = 1,
-                    RequiredBravery = 0, RequiredTrust = 0, RequiredPresence = 5 });
+                Challenges?.Add(new Challenge { 
+                    Title = "Demózás", 
+                    GainableBravery = 10,
+                    RequiredBravery = 0, 
+                    RequiredTrust = 100, 
+                    RequiredPresence = 5,
+                    RequiredCare = 0,
+                    RequiredGrowth = 5
+                });
+                Challenges?.Add(new Challenge { 
+                    Title = "Ügyféllátogatás", 
+                    GainableTrust = 3,
+                    RequiredBravery = 10, 
+                    RequiredTrust = 0, 
+                    RequiredPresence = 0,
+                    RequiredCare = 0,
+                    RequiredGrowth = 0
+                });
+                Challenges?.Add(new Challenge { 
+                    Title = "Mentorálás", 
+                    GainableTrust = 1, 
+                    GainablePresence = 1,
+                    RequiredBravery = 0, 
+                    RequiredTrust = 0,
+                    RequiredPresence = 5,
+                    RequiredCare = 0,
+                    RequiredGrowth = 0
+                });
                 
                 SaveChangesAsync();
                 MEMORY_RUN = true;
