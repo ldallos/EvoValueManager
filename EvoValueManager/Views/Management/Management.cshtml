@@ -37,7 +37,6 @@
 {
     <div class="evo-details-margin">
         <h3>Elvárások</h3>
-        @* Ez a kód végigmegy a propertyken, összehasonlítja a „Model.SelectedCharacter” értékeket (például Bravery) a „Model.SelectedChallenge” követelményekkel, a „GetProperty” és a „GetValue” segítségével hozzáfér az értékekhez, és „!!!” -t mutat, ha a követelmények nem teljesülnek. *@
         @foreach (var trait in new[]
                   {
                       new { Label = "Fejlődés:", Property = "Growth" },
@@ -52,7 +51,6 @@
                     <strong>@trait.Label</strong>
                 </p>
                 <p style="margin-left: 10px;">
-                    @* pl.: Character.GetType().GetProperty("Bravery")!.GetValue("Béla") vagyis Béla Bravery értéke *@
                     @Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)
                     @Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge)
                 </p>
