@@ -35,9 +35,13 @@ namespace EvoCharacterManager.Controllers
                         RequiredBravery = challenge.RequiredBravery,
                         RequiredTrust = challenge.RequiredTrust,
                         RequiredPresence = challenge.RequiredPresence,
+                        RequiredGrowth = challenge.RequiredGrowth,
+                        RequiredCare = challenge.RequiredCare,
                         GainableBravery = challenge.GainableBravery,
                         GainableTrust = challenge.GainableTrust,
-                        GainablePresence = challenge.GainablePresence
+                        GainablePresence = challenge.GainablePresence,
+                        GainableGrowth = challenge.GainableGrowth,
+                        GainableCare = challenge.GainableCare
                     };
                 }
             }
@@ -68,6 +72,8 @@ namespace EvoCharacterManager.Controllers
                 challenge.RequiredBravery = viewModel.SelectedChallenge.RequiredBravery;
                 challenge.RequiredTrust = viewModel.SelectedChallenge.RequiredTrust;
                 challenge.RequiredPresence = viewModel.SelectedChallenge.RequiredPresence;
+                challenge.RequiredGrowth = viewModel.SelectedChallenge.RequiredGrowth;
+                challenge.RequiredCare = viewModel.SelectedChallenge.RequiredCare;
 
                 await myService.SaveChanges();
             }

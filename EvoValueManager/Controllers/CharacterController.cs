@@ -35,7 +35,9 @@ namespace EvoCharacterManager.Controllers
                         Name = character.Name,
                         Bravery = character.Bravery,
                         Trust = character.Trust,
-                        Presence = character.Presence
+                        Presence = character.Presence,
+                        Growth = character.Growth,
+                        Care = character.Care
                     };
                 }
             }
@@ -83,7 +85,9 @@ namespace EvoCharacterManager.Controllers
                 Name = viewModel.NewCharacter.Name,
                 Bravery = viewModel.NewCharacter.Bravery,
                 Trust = viewModel.NewCharacter.Trust,
-                Presence = viewModel.NewCharacter.Presence
+                Presence = viewModel.NewCharacter.Presence,
+                Growth = viewModel.NewCharacter.Growth,
+                Care = viewModel.NewCharacter.Care
             };
             await myService.SaveNewCharacter(character);
             return RedirectToAction("Character", new { selectedCharacterId = viewModel.SelectedCharacterId });

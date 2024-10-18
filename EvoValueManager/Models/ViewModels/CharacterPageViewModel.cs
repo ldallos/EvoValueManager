@@ -12,6 +12,6 @@ namespace EvoCharacterManager.Models.ViewModels
 
         public bool AddCharacter { get; set; }
 
-        public CharacterViewModel NewCharacter { get; set; } = new CharacterViewModel { Bravery = 1, Presence = 1, Trust = 1 };
+        public CharacterViewModel NewCharacter { get; set; } = new CharacterViewModel();
     }
 }
