@@ -11,7 +11,7 @@
     @using (Html.BeginForm("CharacterSelection", "Character", FormMethod.Post))
     {
         @Html.DropDownListFor(m => m.SelectedCharacterId, (SelectList)Model.SelectableCharacters, "Válassz egy csapattagot",
-                new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
+            new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
         @Html.HiddenFor(m => m.AddCharacter)
     }
 
@@ -26,10 +26,24 @@
 @if (Model.SelectedCharacter != null)
 {
     <div class="evo-details-margin">
-        <p><strong>Név:</strong> @Model.SelectedCharacter.Name</p>
-        <p><strong>Merészség:</strong> @Model.SelectedCharacter.Bravery</p>
-        <p><strong>Megbízhatóság:</strong> @Model.SelectedCharacter.Trust</p>
-        <p><strong>Jelenlét:</strong> @Model.SelectedCharacter.Presence</p>
+        <p>
+            <strong>Név:</strong> @Model.SelectedCharacter.Name
+        </p>
+        <p>
+            <strong>Fejlődés:</strong> @Model.SelectedCharacter.Growth
+        </p>
+        <p>
+            <strong>Gondoskodás:</strong> @Model.SelectedCharacter.Care
+        </p>
+        <p>
+            <strong>Jelenlét:</strong> @Model.SelectedCharacter.Presence
+        </p>
+        <p>
+            <strong>Megbízhatóság:</strong> @Model.SelectedCharacter.Trust
+        </p>
+        <p>
+            <strong>Merészség:</strong> @Model.SelectedCharacter.Bravery
+        </p>
     </div>
 }
 
@@ -39,38 +53,70 @@
     {
         <div class="evo-details-margin">
             <div class="evo-flex">
-                <p class="evo-character-label"><strong>Név:</strong></p>
+                <p class="evo-character-label">
+                    <strong>Név:</strong>
+                </p>
                 @Html.TextBoxFor(m => m.NewCharacter.Name, new { @class = "evo-margin" })
             </div>
             <div class="evo-flex">
-                <p class="evo-character-label"><strong>Merészség:</strong></p>
-                @Html.TextBoxFor(m => m.NewCharacter.Bravery, new
-                    {
-                        @class = "evo-margin",
-                        @type = "number",
-                        @min = "1",
-                        @max = "100"
-                    })
+                <p class="evo-character-label">
+                    <strong>Fejlődés:</strong>
+                </p>
+                @Html.TextBoxFor(m => m.NewCharacter.Growth, new
+                {
+                    @class = "evo-margin",
+                    @type = "number",
+                    @min = "1",
+                    @max = "100"
+                })
             </div>
             <div class="evo-flex">
-                <p class="evo-character-label"><strong>Megbízhatóság:</strong></p>
-                @Html.TextBoxFor(m => m.NewCharacter.Trust, new
-                    {
-                        @class = "evo-margin",
-                        @type = "number",
-                        @min = "1",
-                        @max = "100"
-                    })
+                <p class="evo-character-label">
+                    <strong>Gondoskodás:</strong>
+                </p>
+                @Html.TextBoxFor(m => m.NewCharacter.Care, new
+                {
+                    @class = "evo-margin",
+                    @type = "number",
+                    @min = "1",
+                    @max = "100"
+                })
             </div>
             <div class="evo-flex">
-                <p class="evo-character-label"><strong>Jelenlét:</strong></p>
+                <p class="evo-character-label">
+                    <strong>Jelenlét:</strong>
+                </p>
                 @Html.TextBoxFor(m => m.NewCharacter.Presence, new
-                    {
-                        @class = "evo-margin",
-                        @type = "number",
-                        @min = "1",
-                        @max = "100"
-                    })
+                {
+                    @class = "evo-margin",
+                    @type = "number",
+                    @min = "1",
+                    @max = "100"
+                })
+            </div>
+            <div class="evo-flex">
+                <p class="evo-character-label">
+                    <strong>Megbízhatóság:</strong>
+                </p>
+                @Html.TextBoxFor(m => m.NewCharacter.Trust, new
+                {
+                    @class = "evo-margin",
+                    @type = "number",
+                    @min = "1",
+                    @max = "100"
+                })
+            </div>
+            <div class="evo-flex">
+                <p class="evo-character-label">
+                    <strong>Merészség:</strong>
+                </p>
+                @Html.TextBoxFor(m => m.NewCharacter.Bravery, new
+                {
+                    @class = "evo-margin",
+                    @type = "number",
+                    @min = "1",
+                    @max = "100"
+                })
             </div>
             <button type="submit" class="btn btn-primary">Mentés</button>
         </div>

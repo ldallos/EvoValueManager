@@ -64,7 +64,9 @@ namespace EvoCharacterManager.Controllers
                         Name = character.Name,
                         Bravery = character.Bravery,
                         Trust = character.Trust,
-                        Presence = character.Presence
+                        Presence = character.Presence,
+                        Growth = character.Growth,
+                        Care = character.Care
                     };
                 }
 
@@ -80,9 +82,13 @@ namespace EvoCharacterManager.Controllers
                             RequiredBravery = challenge.RequiredBravery,
                             RequiredTrust = challenge.RequiredTrust,
                             RequiredPresence = challenge.RequiredPresence,
+                            RequiredCare = challenge.RequiredCare,
+                            RequiredGrowth = challenge.RequiredGrowth,
                             GainableBravery = challenge.GainableBravery,
                             GainableTrust = challenge.GainableTrust,
-                            GainablePresence = challenge.GainablePresence
+                            GainablePresence = challenge.GainablePresence,
+                            GainableCare = challenge.GainableCare,
+                            GainableGrowth = challenge.GainableGrowth
                         };
                     }
                 }
@@ -150,6 +156,8 @@ namespace EvoCharacterManager.Controllers
                     character.Bravery += challenge.GainableBravery ?? 0;
                     character.Trust += challenge.GainableTrust ?? 0;
                     character.Presence += challenge.GainablePresence ?? 0;
+                    character.Growth += challenge.GainableGrowth ?? 0;
+                    character.Care += challenge.GainableCare ?? 0;
 
                     await myManagementService.RemoveManagement(
                         viewModel.SelectedCharacterId, viewModel.SelectedChallengeId);

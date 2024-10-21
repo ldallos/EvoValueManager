@@ -11,5 +11,9 @@
         public int Trust { get; set; }
 
         public int Presence { get; set; }
+        
+        public int Growth { get; set; }
+        
+        public int Care { get; set; }
     }
 }
