@@ -43,7 +43,7 @@ namespace EvoCharacterManager.Controllers
                     var allChallenges = await myChallengeService.GetAllChallenges();
                     var assignedChallenges = await myManagementService.GetAssignedChallenges(selectedCharacterId.Value);
                     challenges = allChallenges
-                        .Where(c => assignedChallenges.All(ac => ac.ID != c.ID))
+                        .Where(c => !assignedChallenges.Contains(c))
                         .ToList();
                 }
                 else
