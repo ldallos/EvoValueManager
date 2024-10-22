@@ -40,7 +40,11 @@ namespace EvoCharacterManager.Controllers
                 List<Challenge> challenges;
                 if (viewModel.SelectedAssignedId == 1)
                 {
-                    challenges = await myChallengeService.GetAllChallenges();
+                    var allChallenges = await myChallengeService.GetAllChallenges();
+                    var assignedChallenges = await myManagementService.GetAssignedChallenges(selectedCharacterId.Value);
+                    challenges = allChallenges
+                        .Where(c => assignedChallenges.All(ac => ac.ID != c.ID))
+                        .ToList();
                 }
                 else
                 {
@@ -162,6 +166,7 @@ namespace EvoCharacterManager.Controllers
                     await myManagementService.RemoveManagement(
                         viewModel.SelectedCharacterId, viewModel.SelectedChallengeId);
                 }
+
 
                 await myManagementService.SaveChanges();
             }

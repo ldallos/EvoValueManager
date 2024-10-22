@@ -47,19 +47,24 @@
                   })
         {
             <div class="evo-flex">
-                <p class="evo-character-label">
-                    <strong>@trait.Label</strong>
-                </p>
-                <p style="margin-left: 10px;">
-                    @Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)
-                    @Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge)
-                </p>
-                <p style="margin-left: 10px; font-weight: bold">
-                    @(Convert.ToInt32(Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)) -
-                    Convert.ToInt32(Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge)) >= 0
-                        ? ""
-                        : "!!!")
-                </p>
+                @if (Convert.ToInt32(@Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge)) != 0)
+                {
+                    <p class="evo-character-label">
+                        <strong>@trait.Label</strong>
+                    </p>
+                    
+                    <p style="margin-left: 10px;">
+                        @Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)
+                        @Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge)
+                    </p>
+
+                    <p style="margin-left: 10px; font-weight: bold; color: red">
+                        @(Convert.ToInt32(Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)) -
+                        Convert.ToInt32(Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge)) >= 0
+                            ? ""
+                            : "!!!")
+                    </p>
+                }
             </div>
         }
     </div>
@@ -76,13 +81,21 @@
                   })
         {
             <div class="evo-flex">
-                <p class="evo-character-label">
-                    <strong>@trait.Label</strong>
-                </p>
-                <p style="margin-left: 10px;">
-                    @Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)
-                    @Model.SelectedChallenge.GetType().GetProperty("Gainable" + trait.Property)!.GetValue(Model.SelectedChallenge)
-                </p>
+                @if (Convert.ToInt32(@Model.SelectedChallenge.GetType().GetProperty("Gainable" + trait.Property)!.GetValue(Model.SelectedChallenge)) != 0)
+                {
+                    <p class="evo-character-label">
+                        <strong>@trait.Label</strong>
+                    </p>
+                    <p style="margin-left: 10px;">
+                        @(Convert.ToInt32(@Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)))
+                        +@(Convert.ToInt32(@Model.SelectedChallenge.GetType().GetProperty("Gainable" + trait.Property)!.GetValue(Model.SelectedChallenge)))
+                        (
+                        <span style="color: green">
+                            @((Convert.ToInt32(@Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)) +
+                               Convert.ToInt32(@Model.SelectedChallenge.GetType().GetProperty("Gainable" + trait.Property)!.GetValue(Model.SelectedChallenge))))
+                        </span>)
+                    </p>
+                }
             </div>
         }
     </div>
