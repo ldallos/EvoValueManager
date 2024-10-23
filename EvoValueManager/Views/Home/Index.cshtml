@@ -8,11 +8,46 @@
     <p>Üdvözöllek az Evo Értékeink oldalán!</p>
     <p>Itt tudod kezelni a csapattagjaid evosoftos értékeit.</p>
     <p>Ha valakinek fejlődésre lenne szükséges, keress megfelelő kihívásokat számára és itt ezt nyomon tudod követni.</p>
-    <div class="image-container">
-        <img src="~/Content/Images/fejlodes.png" alt="Fejlődés">
-        <img src="~/Content/Images/gondoskodas.png" alt="Gondoskodás">
-        <img src="~/Content/Images/jelenlet.png" alt="Jelenlét">
-        <img src="~/Content/Images/megbizhatosag.png" alt="Megbízhatoság">
-        <img src="~/Content/Images/mereszseg.png" alt="Merészség">
-    </div>
+    <table class="fooldal-ertekek">
+        <tbody>
+        @foreach (var item in new[]
+                  {
+                      new
+                      {
+                          ImageUrl = "~/Content/Images/fejlodes.png",
+                          Description = "Hiszünk abban, hogy sikereink kulcsa tudásunk, mérnöki megoldásaink és adott szavunk megbízhatósága."
+                      },
+                      new
+                      {
+                          ImageUrl = "~/Content/Images/gondoskodas.png",
+                          Description = "Az élet minden területén jelen vagyunk, hatással vagyunk arra, hogy a jövőnk gördülékenyebb és élhetőbb legyen."
+                      },
+                      new
+                      {
+                          ImageUrl = "~/Content/Images/jelenlet.png",
+                          Description = "Tudjuk, hogy minden helyzetben ott a szakmai fejlődés lehetősége, amihez te behozhatod saját személyiséged és érdeklődési köröd színességét is."
+                      },
+                      new
+                      {
+                          ImageUrl = "~/Content/Images/megbizhatosag.png",
+                          Description = "Az evosoftban otthon vagyunk, törődünk egymással. A munkán kívül is színes közösséget alkotunk."
+                      },
+                      new
+                      {
+                          ImageUrl = "~/Content/Images/mereszseg.png",
+                          Description = "Folyamatosan a jobbító szándék vezérel minket. Merünk megkérdőjelezni és tenni."
+                      }
+                  })
+        {
+            <tr>
+                <td class="fooldal-ertekek-kep">
+                    <img src="@Url.Content(item.ImageUrl)" alt="@item.Description"/>
+                </td>
+                <td class="fooldal-ertekek-jelentes">
+                    @item.Description
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
 </div>
