@@ -47,19 +47,26 @@
                   })
         {
             <div class="evo-flex">
+                @{
+                var requiredTraitValue = Convert.ToInt32(Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge));
+                var characterTraitValue = Convert.ToInt32(Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter));
+
+                if (requiredTraitValue != 0)
+                {
                 <p class="evo-character-label">
                     <strong>@trait.Label</strong>
                 </p>
+
                 <p style="margin-left: 10px;">
-                    @Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)
-                    @Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge)
+                    @characterTraitValue
+                    @requiredTraitValue
                 </p>
-                <p style="margin-left: 10px; font-weight: bold">
-                    @(Convert.ToInt32(Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)) -
-                    Convert.ToInt32(Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge)) >= 0
-                        ? ""
-                        : "!!!")
+
+                <p style="margin-left: 10px; font-weight: bold; color: red">
+                    @(characterTraitValue >= requiredTraitValue ? "" : "!!!")
                 </p>
+                }
+                }
             </div>
         }
     </div>
@@ -76,13 +83,24 @@
                   })
         {
             <div class="evo-flex">
+                @{
+                var gainableTraitValue = Convert.ToInt32(Model.SelectedChallenge.GetType().GetProperty("Gainable" + trait.Property)!.GetValue(Model.SelectedChallenge));
+                var characterTraitValue = Convert.ToInt32(Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter));
+
+                if (gainableTraitValue != 0)
+                {
                 <p class="evo-character-label">
                     <strong>@trait.Label</strong>
                 </p>
                 <p style="margin-left: 10px;">
-                    @Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter)
-                    @Model.SelectedChallenge.GetType().GetProperty("Gainable" + trait.Property)!.GetValue(Model.SelectedChallenge)
+                    @characterTraitValue
+                    +@gainableTraitValue
+                    (<span style="color: green">
+                @(characterTraitValue + gainableTraitValue)
+            </span>)
                 </p>
+                }
+                }
             </div>
         }
     </div>
