@@ -26,24 +26,33 @@
 @if (Model.SelectedCharacter != null)
 {
     <div class="evo-details-margin">
-        <p>
-            <strong>Név:</strong> @Model.SelectedCharacter.Name
-        </p>
-        <p>
-            <strong>Fejlődés:</strong> @Model.SelectedCharacter.Growth
-        </p>
-        <p>
-            <strong>Gondoskodás:</strong> @Model.SelectedCharacter.Care
-        </p>
-        <p>
-            <strong>Jelenlét:</strong> @Model.SelectedCharacter.Presence
-        </p>
-        <p>
-            <strong>Megbízhatóság:</strong> @Model.SelectedCharacter.Trust
-        </p>
-        <p>
-            <strong>Merészség:</strong> @Model.SelectedCharacter.Bravery
-        </p>
+        <table>
+            <tr>
+                <td style="text-align: center">
+                    <strong>Név:</strong>
+                </td>
+                <td>@Model.SelectedCharacter.Name</td>
+            </tr>
+            @foreach (var trait in new[]
+                      {
+                          new { Title = "Fejlődés", ImagePath = "~/Content/Images/fejlodes_small.png", Property = "Growth" },
+                          new { Title = "Gondoskodás", ImagePath = "~/Content/Images/gondoskodas_small.png", Property = "Care" },
+                          new { Title = "Jelenlét", ImagePath = "~/Content/Images/jelenlet_small.png", Property = "Presence" },
+                          new { Title = "Megbízhatóság", ImagePath = "~/Content/Images/megbizhatosag_small.png", Property = "Trust" },
+                          new { Title = "Merészség", ImagePath = "~/Content/Images/mereszseg_small.png", Property = "Bravery" }
+                      })
+            {
+                var traitValue = Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter);
+                <tr>
+                    <td>
+                        <div class="evo-traits-image-small">
+                            <img src="@Url.Content(trait.ImagePath)" alt="@trait.Title" title="@trait.Title"/>
+                        </div>
+                    </td>
+                    <td>@traitValue</td>
+                </tr>
+            }
+        </table>
     </div>
 }
 

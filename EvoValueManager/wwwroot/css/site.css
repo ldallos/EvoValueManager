@@ -51,14 +51,17 @@ body {
     width: 200px;
 }
 
-.image-container {
-    display: inline;
-    justify-content: space-between;
-    align-items: center;
+.evo-traits-image-small img {
+    width: 72px;
+    height: 72px;
 }
 
-.image-container img {
+.fooldal-ertekek-kep img {
     width: 180px;
     height: 250px;
     margin: 10px;
+}
+
+.bg-evosoft {
+    background-color: rgb(97, 150, 33);
 }
