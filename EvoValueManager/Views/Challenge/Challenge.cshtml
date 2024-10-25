@@ -1,4 +1,5 @@
 ﻿@using EvoCharacterManager.Models.ViewModels
+@using EvoValueManager.Models.Shared
 @model ChallengePageViewModel
 
 @{
@@ -25,20 +26,14 @@
                 </td>
                 <td>@Model.SelectedChallenge.Title</td>
             </tr>
-            @foreach (var trait in new[]
-                      {
-                          new { Title = "Fejlődés", ImagePath = "~/Content/Images/fejlodes_small.png", Property = "Growth" },
-                          new { Title = "Gondoskodás", ImagePath = "~/Content/Images/gondoskodas_small.png", Property = "Care" },
-                          new { Title = "Jelenlét", ImagePath = "~/Content/Images/jelenlet_small.png", Property = "Presence" },
-                          new { Title = "Megbízhatóság", ImagePath = "~/Content/Images/megbizhatosag_small.png", Property = "Trust" },
-                          new { Title = "Merészség", ImagePath = "~/Content/Images/mereszseg_small.png", Property = "Bravery" }
-                      })
+            @foreach (var trait in Constants.Traits.Values)
+
             {
                 var traitValue = Model.SelectedChallenge.GetType().GetProperty($"Required{trait.Property}")!.GetValue(Model.SelectedChallenge);
                 <tr>
                     <td>
                         <div class="evo-traits-image-small">
-                            <img src="@Url.Content(trait.ImagePath)" alt="@trait.Title" title="@trait.Title"/>
+                            <img src="@Url.Content(trait.ImageSmall)" alt="@trait.Title" title="@trait.Title"/>
                         </div>
                     </td>
                     <td>@traitValue</td>
