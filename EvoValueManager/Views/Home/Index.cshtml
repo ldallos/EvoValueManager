@@ -1,4 +1,5 @@
-﻿@{
+﻿@using EvoValueManager.Models.Shared
+@{
     ViewBag.Title = "Főoldal";
 }
 
@@ -8,11 +9,19 @@
     <p>Üdvözöllek az Evo Értékeink oldalán!</p>
     <p>Itt tudod kezelni a csapattagjaid evosoftos értékeit.</p>
     <p>Ha valakinek fejlődésre lenne szükséges, keress megfelelő kihívásokat számára és itt ezt nyomon tudod követni.</p>
-    <div class="image-container">
-        <img src="~/Content/Images/fejlodes.png" alt="Fejlődés">
-        <img src="~/Content/Images/gondoskodas.png" alt="Gondoskodás">
-        <img src="~/Content/Images/jelenlet.png" alt="Jelenlét">
-        <img src="~/Content/Images/megbizhatosag.png" alt="Megbízhatoság">
-        <img src="~/Content/Images/mereszseg.png" alt="Merészség">
-    </div>
+    <table class="evo-index">
+        <tbody>
+        @foreach (var trait in Constants.Traits.Values)
+        {
+            <tr>
+                <td class="evo-index-image">
+                    <img src="@Url.Content(trait.Image)" alt="@trait.Description"/>
+                </td>
+                <td class="evo-index-description">
+                    @trait.Description
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
 </div>

@@ -1,4 +1,5 @@
 ﻿@using EvoCharacterManager.Models.ViewModels
+@using EvoValueManager.Models.Shared
 @model ManagementPageViewModel
 
 @{
@@ -37,35 +38,33 @@
 {
     <div class="evo-details-margin">
         <h3>Elvárások</h3>
-        @foreach (var trait in new[]
-                  {
-                      new { Label = "Fejlődés:", Property = "Growth" },
-                      new { Label = "Gondoskodás:", Property = "Care" },
-                      new { Label = "Jelenlét:", Property = "Presence" },
-                      new { Label = "Megbízhatóság:", Property = "Trust" },
-                      new { Label = "Merészség:", Property = "Bravery" }
-                  })
+        @foreach (var trait in Constants.Traits.Values)
         {
             <div class="evo-flex">
                 @{
-                var requiredTraitValue = Convert.ToInt32(Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge));
-                var characterTraitValue = Convert.ToInt32(Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter));
+                    var requiredTraitValue = Convert.ToInt32(Model.SelectedChallenge.GetType().GetProperty("Required" + trait.Property)!.GetValue(Model.SelectedChallenge));
+                    var characterTraitValue = Convert.ToInt32(Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter));
 
-                if (requiredTraitValue != 0)
-                {
-                <p class="evo-character-label">
-                    <strong>@trait.Label</strong>
-                </p>
-
-                <p style="margin-left: 10px;">
-                    @characterTraitValue
-                    @requiredTraitValue
-                </p>
-
-                <p style="margin-left: 10px; font-weight: bold; color: red">
-                    @(characterTraitValue >= requiredTraitValue ? "" : "!!!")
-                </p>
-                }
+                    if (requiredTraitValue != 0)
+                    {
+                        <table>
+                            <tr>
+                                <td>
+                                    <div class="evo-traits-image-small">
+                                        <img src="@Url.Content(trait.ImageSmall)" alt="@trait.Title" title="@trait.Title"/>
+                                    </div>
+                                </td>
+                                <td style="padding-left: 10px;">
+                                    <p>
+                                        @(characterTraitValue) @(requiredTraitValue)
+                                        <span style="color: red; font-weight: bold">
+                                            @(characterTraitValue >= requiredTraitValue ? "" : "!!!")
+                                        </span>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    }
                 }
             </div>
         }
@@ -73,33 +72,34 @@
 
     <div class="evo-details-margin">
         <h3>Fejlődési lehetőségek</h3>
-        @foreach (var trait in new[]
-                  {
-                      new { Label = "Fejlődés:", Property = "Growth" },
-                      new { Label = "Gondoskodás:", Property = "Care" },
-                      new { Label = "Jelenlét:", Property = "Presence" },
-                      new { Label = "Megbízhatóság:", Property = "Trust" },
-                      new { Label = "Merészség:", Property = "Bravery" }
-                  })
+        @foreach (var trait in Constants.Traits.Values)
         {
             <div class="evo-flex">
                 @{
-                var gainableTraitValue = Convert.ToInt32(Model.SelectedChallenge.GetType().GetProperty("Gainable" + trait.Property)!.GetValue(Model.SelectedChallenge));
-                var characterTraitValue = Convert.ToInt32(Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter));
+                    var gainableTraitValue = Convert.ToInt32(Model.SelectedChallenge.GetType().GetProperty("Gainable" + trait.Property)!.GetValue(Model.SelectedChallenge));
+                    var characterTraitValue = Convert.ToInt32(Model.SelectedCharacter.GetType().GetProperty(trait.Property)!.GetValue(Model.SelectedCharacter));
 
-                if (gainableTraitValue != 0)
-                {
-                <p class="evo-character-label">
-                    <strong>@trait.Label</strong>
-                </p>
-                <p style="margin-left: 10px;">
-                    @characterTraitValue
-                    +@gainableTraitValue
-                    (<span style="color: green">
-                @(characterTraitValue + gainableTraitValue)
-            </span>)
-                </p>
-                }
+                    @if (gainableTraitValue != 0)
+                    {
+                        <table>
+                            <tr>
+                                <td>
+                                    <div class="evo-traits-image-small">
+                                        <img src="@Url.Content(trait.ImageSmall)" alt="@trait.Title" title="@trait.Title"/>
+                                    </div>
+                                </td>
+                                <td style="padding-left: 10px;">
+                                    <p>
+                                        @(characterTraitValue) +@(gainableTraitValue)
+                                        (
+                                        <span style="color: green">
+                                            @(characterTraitValue + gainableTraitValue)
+                                        </span> )
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    }
                 }
             </div>
         }

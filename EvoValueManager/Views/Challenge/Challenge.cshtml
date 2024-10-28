@@ -1,4 +1,5 @@
 ﻿@using EvoCharacterManager.Models.ViewModels
+@using EvoValueManager.Models.Shared
 @model ChallengePageViewModel
 
 @{
@@ -18,27 +19,31 @@
 @if (Model.SelectedChallenge != null)
 {
     <div class="evo-details-margin">
-        <p>
-            <strong>Cím:</strong> @Model.SelectedChallenge.Title
-        </p>
-        <p>
-            <strong>Elvárt Fejlődés:</strong> @Model.SelectedChallenge.RequiredGrowth
-        </p>
-        <p>
-            <strong>Elvárt Gondoskodás:</strong> @Model.SelectedChallenge.RequiredCare
-        </p>
-        <p>
-            <strong>Elvárt Jelenlét:</strong> @Model.SelectedChallenge.RequiredPresence
-        </p>
-        <p>
-            <strong>Elvárt Megbízhatóság:</strong> @Model.SelectedChallenge.RequiredTrust
-        </p>
-        <p>
-            <strong>Elvárt Merészség:</strong> @Model.SelectedChallenge.RequiredBravery
-        </p>
+        <table>
+            <tr>
+                <td style="text-align: center">
+                    <strong>Cím:</strong>
+                </td>
+                <td>@Model.SelectedChallenge.Title</td>
+            </tr>
+            @foreach (var trait in Constants.Traits.Values)
+
+            {
+                var traitValue = Model.SelectedChallenge.GetType().GetProperty($"Required{trait.Property}")!.GetValue(Model.SelectedChallenge);
+                <tr>
+                    <td>
+                        <div class="evo-traits-image-small">
+                            <img src="@Url.Content(trait.ImageSmall)" alt="@trait.Title" title="@trait.Title"/>
+                        </div>
+                    </td>
+                    <td>@traitValue</td>
+                </tr>
+            }
+        </table>
     </div>
 
-    <button type="button" onclick="toggleDiv()" class="btn btn-primary">Szerkesztés</button>
+
+    <button type="button" onclick="toggleDiv()" class="btn btn-primary" style="margin-top: 10px">Szerkesztés</button>
 
     <div id="editChallenge" style="display:none;">
         @using (Html.BeginForm("SaveChallengeChange", "Challenge", FormMethod.Post))
