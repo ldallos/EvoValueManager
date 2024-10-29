@@ -39,7 +39,6 @@ namespace EvoCharacterManager.Services
                 Challenge? challange = await myChallengeService.GetChallengeById(management.ChallangeId);
                 if (challange != null)
                 {
-                    challange.Details = management.Details;
                     challenges.Add(challange);
                 }
             }
