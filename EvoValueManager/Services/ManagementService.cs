@@ -1,5 +1,6 @@
 ﻿using EvoCharacterManager.Data;
 using EvoCharacterManager.Models.Entities;
+using EvoCharacterManager.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace EvoCharacterManager.Services
@@ -13,36 +14,48 @@ namespace EvoCharacterManager.Services
             context.Database.EnsureCreated();
         }
 
-        public async Task AssignChallenge(int characterId, int challengeId)
+        public async Task AssignChallenge(int characterId, int challengeId, string details)
         {
             await myContext.Managements.AddAsync(
                 new Management
                 {
                     CharacterId = characterId,
                     ChallangeId = challengeId,
-                    State = "Assigned"
+                    State = "Assigned",
+                    Details = details
                 }
             );
         }
-
+        
         public async Task<List<Challenge>> GetAssignedChallenges(int characterId)
         {
-            List<Management> mangagements = await myContext.Managements.Where(management =>
-                management.CharacterId == characterId).ToListAsync();
-
+            List<Management> mangagements = await myContext.Managements
+                .Where(management => management.CharacterId == characterId)
+                .ToListAsync();
+            
             List<Challenge> challenges = new List<Challenge>();
             foreach (Management management in mangagements)
             {
                 Challenge? challange = await myChallengeService.GetChallengeById(management.ChallangeId);
                 if (challange != null)
                 {
+                    challange.Details = management.Details;
                     challenges.Add(challange);
                 }
             }
 
             return challenges;
         }
+        
+        public async Task<string> GetManagementDetails(int characterId, int challengeId)
+        {
+            var management = await myContext.Managements
+                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallangeId == challengeId);
 
+            return management?.Details ?? string.Empty;
+        }
+
+        
         public async Task RemoveManagement(int characterId, int challengeId)
         {
             Management management = await myContext.Managements.SingleAsync(management =>

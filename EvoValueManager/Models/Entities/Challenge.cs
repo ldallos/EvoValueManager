@@ -39,5 +39,8 @@ namespace EvoCharacterManager.Models.Entities
         
         [Column("gainable_care")]
         public int? GainableCare { get; set; }
+        
+        [Column("details")] 
+        public string? Details { get; set; } = string.Empty;
     }
 }

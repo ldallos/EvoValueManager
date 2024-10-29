@@ -15,5 +15,8 @@ namespace EvoCharacterManager.Models.Entities
 
         [Column("state")]
         public string State { get; set; } = string.Empty;
+
+        [Column("details")]
+        public string? Details { get; set; }
     }
 }

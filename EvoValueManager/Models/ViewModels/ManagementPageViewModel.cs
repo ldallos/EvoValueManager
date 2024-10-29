@@ -32,5 +32,6 @@ namespace EvoCharacterManager.Models.ViewModels
         public CharacterViewModel? SelectedCharacter { get; set; }
 
         public ChallengeViewModel? SelectedChallenge { get; set; }
+        public string? Details { get; set; }
     }
 }

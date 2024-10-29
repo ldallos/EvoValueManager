@@ -111,7 +111,11 @@
             @Html.HiddenFor(m => m.SelectedAssignedId)
             @Html.HiddenFor(m => m.SelectedCharacterId)
             @Html.HiddenFor(m => m.SelectedChallengeId)
-            <button type="submit" class="btn btn-primary">
+            <div class="form-group">
+                <h3>Részletek</h3>
+                <textarea id="Details" name="Details" rows="5" class="form-control">@Model.Details</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top: 10px">
                 @(Model.SelectedAssignedId == 1 ? "Kihívás felvétele" : "Lezárás")
             </button>
         </div>

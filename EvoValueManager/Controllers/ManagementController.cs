@@ -94,6 +94,7 @@ namespace EvoCharacterManager.Controllers
                             GainableCare = challenge.GainableCare,
                             GainableGrowth = challenge.GainableGrowth
                         };
+                        viewModel.Details = await myManagementService.GetManagementDetails(selectedCharacterId.Value, selectedChallengeId.Value);
                     }
                 }
             }
@@ -153,7 +154,7 @@ namespace EvoCharacterManager.Controllers
                 if (viewModel.SelectedAssignedId == 1)
                 {
                     await myManagementService.AssignChallenge(
-                        viewModel.SelectedCharacterId, viewModel.SelectedChallengeId);
+                        viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, viewModel.Details);
                 }
                 else
                 {
