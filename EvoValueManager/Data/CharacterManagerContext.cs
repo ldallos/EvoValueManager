@@ -68,6 +68,13 @@ namespace EvoCharacterManager.Data
                     RequiredCare = 0,
                     RequiredGrowth = 0
                 });
+                Managements?.Add(new Management
+                {
+                    CharacterId = 1,
+                    ChallangeId = 1,
+                    State = "Assigned",
+                    Details = "Előre létrehozott megjegyzés."
+                });
                 
                 SaveChangesAsync();
                 MEMORY_RUN = true;
