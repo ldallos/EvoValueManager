@@ -9,5 +9,9 @@ namespace EvoCharacterManager.Models.ViewModels
         public ChallengeViewModel? SelectedChallenge { get; set; }
 
         public SelectList SelectableChallenges { get; set; } = new SelectList(new List<string>());
+
+        public bool AddChallenge { get; set; }
+
+        public ChallengeViewModel NewChallenge { get; set; } = new ChallengeViewModel();
     }
 }

@@ -13,7 +13,7 @@
     {
         @Html.DropDownListFor(m => m.SelectedCharacterId, (SelectList)Model.SelectableCharacters, "Válassz egy csapattagot",
             new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
-        @Html.HiddenFor(m => m.AddCharacter)
+        Task SaveNewCharacter(Character character);
     }
 
     @using (Html.BeginForm("AddCharacter", "Character", FormMethod.Post))
@@ -52,7 +52,7 @@
 
 @if (Model.AddCharacter)
 {
-    @using (Html.BeginForm("SaveNewCharacter", "Character", FormMethod.Post))
+    using (Html.BeginForm("SaveNewCharacter", "Character", FormMethod.Post))
     {
         <div class="evo-details-margin">
             <div class="evo-flex">
