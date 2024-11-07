@@ -1,4 +1,5 @@
-﻿using EvoCharacterManager.Models.ViewModels;
+﻿using EvoCharacterManager.Models.Entities;
+using EvoCharacterManager.Models.ViewModels;
 using EvoCharacterManager.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -12,7 +13,7 @@ namespace EvoCharacterManager.Controllers
             myService = service;
         }
 
-        public async Task<IActionResult> Challenge(int? selectedChallengeId)
+        public async Task<IActionResult> Challenge(int? selectedChallengeId, bool? addChallenge)
         {
             var challenges = await myService.GetAllChallenges();
 
@@ -50,7 +51,8 @@ namespace EvoCharacterManager.Controllers
             {
                 SelectedChallengeId = selectedChallengeId ?? 0,
                 SelectedChallenge = selectedChallenge,
-                SelectableChallenges = new SelectList(challengeViewModels, "Id", "Title")
+                SelectableChallenges = new SelectList(challengeViewModels, "Id", "Title"),
+                AddChallenge = false
             };
 
             return View(viewModel);
@@ -78,6 +80,27 @@ namespace EvoCharacterManager.Controllers
                 await myService.SaveChanges();
             }
 
+            return RedirectToAction("Challenge", new { selectedChallengeId = viewModel.SelectedChallengeId });
+        }
+        [HttpPost]
+        public IActionResult AddChallenge(ChallengePageViewModel viewModel)
+        {
+            return RedirectToAction("Challenge", new { selectedChallengeId = viewModel.SelectedChallengeId, addChallenge=!viewModel.AddChallenge });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveNewChallenge(ChallengePageViewModel viewModel)
+        {
+            Challenge challenge = new Challenge
+            {
+                Title = viewModel.NewChallenge.Title,
+                RequiredBravery = viewModel.NewChallenge.RequiredBravery,
+                RequiredTrust = viewModel.NewChallenge.RequiredTrust,
+                RequiredPresence = viewModel.NewChallenge.RequiredPresence,
+                RequiredGrowth = viewModel.NewChallenge.RequiredGrowth,
+                RequiredCare = viewModel.NewChallenge.RequiredCare
+            };
+            await myService.SaveNewChallenge(challenge);
             return RedirectToAction("Challenge", new { selectedChallengeId = viewModel.SelectedChallengeId });
         }
 

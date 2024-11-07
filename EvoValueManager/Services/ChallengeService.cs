@@ -21,6 +21,11 @@ namespace EvoCharacterManager.Services
         {
             return await myContext.Challenges.FindAsync(id);
         }
+        public async Task SaveNewChallenge(Challenge challenge)
+        {
+            await myContext.Challenges.AddAsync(challenge);
+            await myContext.SaveChangesAsync();
+        }
 
         public async Task SaveChanges()
         {
