@@ -59,7 +59,14 @@
                 <p class="evo-character-label">
                     <strong>Név:</strong>
                 </p>
-                @Html.TextBoxFor(m => m.NewCharacter.Name, new { @class = "evo-margin" })
+                @Html.TextBoxFor(m => m.NewCharacter.Name, new 
+                    { 
+                        @class = "evo-margin",
+                        @required = "required",
+                        @minlength = "3",
+                        @placeholder = "Add meg a nevet"
+                    }
+                )
             </div>
             <div class="evo-flex">
                 <p class="evo-character-label">
