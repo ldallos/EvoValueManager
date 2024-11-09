@@ -111,13 +111,31 @@
             @Html.HiddenFor(m => m.SelectedAssignedId)
             @Html.HiddenFor(m => m.SelectedCharacterId)
             @Html.HiddenFor(m => m.SelectedChallengeId)
+
             <div class="form-group">
-                <h3>Részletek</h3>
+                <div style="display: flex; align-items: center;">
+                    <h3>Részletek</h3>
+                    @if (TempData["UpdateSuccess"] != null)
+                    {
+                        <span class="text-success" style="margin-left: 10px;">
+                            @TempData["UpdateSuccess"]
+                        </span>
+                    }
+                </div>
+
                 <textarea id="Details" name="Details" rows="5" class="form-control">@Model.Details</textarea>
             </div>
-            <button type="submit" class="btn btn-primary" style="margin-top: 10px">
+
+            <button type="submit" name="action" value="ManageChallenge" class="btn btn-primary" style="margin-top: 10px">
                 @(Model.SelectedAssignedId == 1 ? "Kihívás felvétele" : "Lezárás")
             </button>
+
+            @if (!string.IsNullOrEmpty(Model.Details) || Model.SelectedAssignedId != 1)
+            {
+                <button type="submit" name="action" value="UpdateDetails" class="btn btn-secondary" style="margin-top: 10px">
+                    Frissítés
+                </button>
+            }
         </div>
     }
 }

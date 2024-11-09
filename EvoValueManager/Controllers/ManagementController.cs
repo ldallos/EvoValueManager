@@ -94,7 +94,9 @@ namespace EvoCharacterManager.Controllers
                             GainableCare = challenge.GainableCare,
                             GainableGrowth = challenge.GainableGrowth
                         };
-                        viewModel.Details = await myManagementService.GetManagementDetails(selectedCharacterId.Value, selectedChallengeId.Value);
+                        viewModel.Details =
+                            await myManagementService.GetManagementDetails(selectedCharacterId.Value,
+                                selectedChallengeId.Value);
                     }
                 }
             }
@@ -144,17 +146,40 @@ namespace EvoCharacterManager.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ManageChallenge(ManagementPageViewModel viewModel)
+        public async Task<IActionResult> ManageChallenge(ManagementPageViewModel viewModel, string action)
         {
-            Character? character = await myCharacterService.GetCharacterById(viewModel.SelectedCharacterId);
-            Challenge? challenge = await myChallengeService.GetChallengeById(viewModel.SelectedChallengeId);
-
-            if (character != null && challenge != null)
+            if (action == "UpdateDetails")
             {
+                await myManagementService.UpdateManagementDetails(
+                    viewModel.SelectedCharacterId,
+                    viewModel.SelectedChallengeId,
+                    viewModel.Details
+                );
+
+                TempData["UpdateSuccess"] = "Sikeresen frissítve";
+
+                return RedirectToAction("Management", new
+                {
+                    selectedAssignedId = viewModel.SelectedAssignedId,
+                    selectedCharacterId = viewModel.SelectedCharacterId,
+                    selectedChallengeId = viewModel.SelectedChallengeId
+                });
+            }
+
+            if (action == "ManageChallenge")
+            {
+                Character? character = await myCharacterService.GetCharacterById(viewModel.SelectedCharacterId);
+                Challenge? challenge = await myChallengeService.GetChallengeById(viewModel.SelectedChallengeId);
+
+                if (character == null || challenge == null) return RedirectToAction("Management");
+
                 if (viewModel.SelectedAssignedId == 1)
                 {
                     await myManagementService.AssignChallenge(
-                        viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, viewModel.Details);
+                        viewModel.SelectedCharacterId,
+                        viewModel.SelectedChallengeId,
+                        viewModel.Details
+                    );
                 }
                 else
                 {
@@ -164,16 +189,18 @@ namespace EvoCharacterManager.Controllers
                     character.Growth += challenge.GainableGrowth ?? 0;
                     character.Care += challenge.GainableCare ?? 0;
 
-                    await myManagementService.RemoveManagement(
-                        viewModel.SelectedCharacterId, viewModel.SelectedChallengeId);
+                    await myManagementService.RemoveManagement(viewModel.SelectedCharacterId,
+                        viewModel.SelectedChallengeId);
                 }
 
-
                 await myManagementService.SaveChanges();
+
+                return RedirectToAction("Management");
             }
 
             return RedirectToAction("Management");
         }
+
 
         private readonly IManagementService myManagementService;
         private readonly ICharacterService myCharacterService;
