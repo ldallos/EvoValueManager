@@ -145,58 +145,58 @@ namespace EvoCharacterManager.Controllers
             return RedirectToAction("Management", new { selectedCharacterId = viewModel.SelectedCharacterId });
         }
 
+
         [HttpPost]
-        public async Task<IActionResult> ManageChallenge(ManagementPageViewModel viewModel, string action)
+        public async Task<IActionResult> UpdateChallengeDetails(ManagementPageViewModel viewModel)
         {
-            if (action == "UpdateDetails")
+            await myManagementService.UpdateManagementDetails(
+                viewModel.SelectedCharacterId,
+                viewModel.SelectedChallengeId,
+                viewModel.Details
+            );
+
+            TempData["UpdateSuccess"] = "Sikeresen frissítve";
+
+            return RedirectToAction("Management", new
             {
-                await myManagementService.UpdateManagementDetails(
-                    viewModel.SelectedCharacterId,
-                    viewModel.SelectedChallengeId,
-                    viewModel.Details
-                );
+                selectedAssignedId = viewModel.SelectedAssignedId,
+                selectedCharacterId = viewModel.SelectedCharacterId,
+                selectedChallengeId = viewModel.SelectedChallengeId
+            });
+        }
 
-                TempData["UpdateSuccess"] = "Sikeresen frissítve";
+        [HttpPost]
+        public async Task<IActionResult> AssignChallenge(ManagementPageViewModel viewModel)
+        {
+            await myManagementService.AssignChallenge(
+                viewModel.SelectedCharacterId,
+                viewModel.SelectedChallengeId,
+                viewModel.Details
+            );
 
-                return RedirectToAction("Management", new
-                {
-                    selectedAssignedId = viewModel.SelectedAssignedId,
-                    selectedCharacterId = viewModel.SelectedCharacterId,
-                    selectedChallengeId = viewModel.SelectedChallengeId
-                });
-            }
+            await myManagementService.SaveChanges();
 
-            if (action == "ManageChallenge")
-            {
-                Character? character = await myCharacterService.GetCharacterById(viewModel.SelectedCharacterId);
-                Challenge? challenge = await myChallengeService.GetChallengeById(viewModel.SelectedChallengeId);
+            return RedirectToAction("Management");
+        }
 
-                if (character == null || challenge == null) return RedirectToAction("Management");
+        [HttpPost]
+        public async Task<IActionResult> CloseChallenge(ManagementPageViewModel viewModel)
+        {
+            Character? character = await myCharacterService.GetCharacterById(viewModel.SelectedCharacterId);
+            Challenge? challenge = await myChallengeService.GetChallengeById(viewModel.SelectedChallengeId);
 
-                if (viewModel.SelectedAssignedId == 1)
-                {
-                    await myManagementService.AssignChallenge(
-                        viewModel.SelectedCharacterId,
-                        viewModel.SelectedChallengeId,
-                        viewModel.Details
-                    );
-                }
-                else
-                {
-                    character.Bravery += challenge.GainableBravery ?? 0;
-                    character.Trust += challenge.GainableTrust ?? 0;
-                    character.Presence += challenge.GainablePresence ?? 0;
-                    character.Growth += challenge.GainableGrowth ?? 0;
-                    character.Care += challenge.GainableCare ?? 0;
+            if (character == null || challenge == null) return RedirectToAction("Management");
 
-                    await myManagementService.RemoveManagement(viewModel.SelectedCharacterId,
-                        viewModel.SelectedChallengeId);
-                }
+            character.Bravery += challenge.GainableBravery ?? 0;
+            character.Trust += challenge.GainableTrust ?? 0;
+            character.Presence += challenge.GainablePresence ?? 0;
+            character.Growth += challenge.GainableGrowth ?? 0;
+            character.Care += challenge.GainableCare ?? 0;
 
-                await myManagementService.SaveChanges();
+            await myManagementService.RemoveManagement(viewModel.SelectedCharacterId,
+                viewModel.SelectedChallengeId);
 
-                return RedirectToAction("Management");
-            }
+            await myManagementService.SaveChanges();
 
             return RedirectToAction("Management");
         }
