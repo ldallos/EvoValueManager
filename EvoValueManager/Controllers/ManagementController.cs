@@ -94,7 +94,9 @@ namespace EvoCharacterManager.Controllers
                             GainableCare = challenge.GainableCare,
                             GainableGrowth = challenge.GainableGrowth
                         };
-                        viewModel.Details = await myManagementService.GetManagementDetails(selectedCharacterId.Value, selectedChallengeId.Value);
+                        viewModel.Details =
+                            await myManagementService.GetManagementDetails(selectedCharacterId.Value,
+                                selectedChallengeId.Value);
                     }
                 }
             }
@@ -143,37 +145,62 @@ namespace EvoCharacterManager.Controllers
             return RedirectToAction("Management", new { selectedCharacterId = viewModel.SelectedCharacterId });
         }
 
+
         [HttpPost]
-        public async Task<IActionResult> ManageChallenge(ManagementPageViewModel viewModel)
+        public async Task<IActionResult> UpdateChallengeDetails(ManagementPageViewModel viewModel)
+        {
+            await myManagementService.UpdateManagementDetails(
+                viewModel.SelectedCharacterId,
+                viewModel.SelectedChallengeId,
+                viewModel.Details
+            );
+
+            TempData["UpdateSuccess"] = "Sikeresen frissítve";
+
+            return RedirectToAction("Management", new
+            {
+                selectedAssignedId = viewModel.SelectedAssignedId,
+                selectedCharacterId = viewModel.SelectedCharacterId,
+                selectedChallengeId = viewModel.SelectedChallengeId
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AssignChallenge(ManagementPageViewModel viewModel)
+        {
+            await myManagementService.AssignChallenge(
+                viewModel.SelectedCharacterId,
+                viewModel.SelectedChallengeId,
+                viewModel.Details
+            );
+
+            await myManagementService.SaveChanges();
+
+            return RedirectToAction("Management");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CloseChallenge(ManagementPageViewModel viewModel)
         {
             Character? character = await myCharacterService.GetCharacterById(viewModel.SelectedCharacterId);
             Challenge? challenge = await myChallengeService.GetChallengeById(viewModel.SelectedChallengeId);
 
-            if (character != null && challenge != null)
-            {
-                if (viewModel.SelectedAssignedId == 1)
-                {
-                    await myManagementService.AssignChallenge(
-                        viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, viewModel.Details);
-                }
-                else
-                {
-                    character.Bravery += challenge.GainableBravery ?? 0;
-                    character.Trust += challenge.GainableTrust ?? 0;
-                    character.Presence += challenge.GainablePresence ?? 0;
-                    character.Growth += challenge.GainableGrowth ?? 0;
-                    character.Care += challenge.GainableCare ?? 0;
+            if (character == null || challenge == null) return RedirectToAction("Management");
 
-                    await myManagementService.RemoveManagement(
-                        viewModel.SelectedCharacterId, viewModel.SelectedChallengeId);
-                }
+            character.Bravery += challenge.GainableBravery ?? 0;
+            character.Trust += challenge.GainableTrust ?? 0;
+            character.Presence += challenge.GainablePresence ?? 0;
+            character.Growth += challenge.GainableGrowth ?? 0;
+            character.Care += challenge.GainableCare ?? 0;
 
+            await myManagementService.RemoveManagement(viewModel.SelectedCharacterId,
+                viewModel.SelectedChallengeId);
 
-                await myManagementService.SaveChanges();
-            }
+            await myManagementService.SaveChanges();
 
             return RedirectToAction("Management");
         }
+
 
         private readonly IManagementService myManagementService;
         private readonly ICharacterService myCharacterService;

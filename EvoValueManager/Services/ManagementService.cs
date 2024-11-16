@@ -26,13 +26,13 @@ namespace EvoCharacterManager.Services
                 }
             );
         }
-        
+
         public async Task<List<Challenge>> GetAssignedChallenges(int characterId)
         {
             List<Management> mangagements = await myContext.Managements
                 .Where(management => management.CharacterId == characterId)
                 .ToListAsync();
-            
+
             List<Challenge> challenges = new List<Challenge>();
             foreach (Management management in mangagements)
             {
@@ -45,7 +45,7 @@ namespace EvoCharacterManager.Services
 
             return challenges;
         }
-        
+
         public async Task<string> GetManagementDetails(int characterId, int challengeId)
         {
             var management = await myContext.Managements
@@ -54,7 +54,7 @@ namespace EvoCharacterManager.Services
             return management?.Details ?? string.Empty;
         }
 
-        
+
         public async Task RemoveManagement(int characterId, int challengeId)
         {
             Management management = await myContext.Managements.SingleAsync(management =>
@@ -62,6 +62,19 @@ namespace EvoCharacterManager.Services
 
             myContext.Managements.Remove(management);
         }
+
+        public async Task UpdateManagementDetails(int characterId, int challengeId, string? details)
+        {
+            var managementEntry = await myContext.Managements
+                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallangeId == challengeId);
+
+            if (managementEntry != null)
+            {
+                managementEntry.Details = details;
+                await myContext.SaveChangesAsync();
+            }
+        }
+
 
         public async Task SaveChanges()
         {

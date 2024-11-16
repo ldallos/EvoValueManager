@@ -12,5 +12,8 @@ namespace EvoCharacterManager.Services
 
         Task SaveChanges();
         Task<string?> GetManagementDetails(int selectedCharacterId, int selectedChallengeId);
+
+        Task UpdateManagementDetails(int viewModelSelectedCharacterId, int viewModelSelectedChallengeId,
+            string? viewModelDetails);
     }
 }
