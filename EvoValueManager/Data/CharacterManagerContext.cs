@@ -1,4 +1,4 @@
-﻿using EvoCharacterManager.Models.Entities;
+using EvoCharacterManager.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace EvoCharacterManager.Data
@@ -72,7 +72,7 @@ namespace EvoCharacterManager.Data
                 {
                     CharacterId = 1,
                     ChallangeId = 1,
-                    State = "Assigned",
+                    State = "Folyamatban",
                     Details = "Előre létrehozott megjegyzés."
                 });
                 

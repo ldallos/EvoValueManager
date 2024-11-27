@@ -1,4 +1,4 @@
-﻿using EvoCharacterManager.Models.Entities;
+using EvoCharacterManager.Models.Entities;
 
 namespace EvoCharacterManager.Services
 {
@@ -8,12 +8,20 @@ namespace EvoCharacterManager.Services
 
         Task<List<Challenge>> GetAssignedChallenges(int characterId);
 
+        Task<string> GetManagementDetails(int characterId, int challengeId);
+
+        Task<Management?> GetManagement(int characterId, int challengeId);
+
+        Task<List<Challenge>> GetClosedChallenges(int characterId);
+
         Task RemoveManagement(int characterId, int challengeId);
 
-        Task SaveChanges();
-        Task<string?> GetManagementDetails(int selectedCharacterId, int selectedChallengeId);
+        Task UpdateManagementDetails(int characterId, int challengeId, string? details);
 
-        Task UpdateManagementDetails(int viewModelSelectedCharacterId, int viewModelSelectedChallengeId,
-            string? viewModelDetails);
+        Task UpdateState(int characterId, int challengeId, string state);
+
+        Task<string?> GetState(int characterId, int challengeId);
+
+        Task SaveChanges();
     }
 }

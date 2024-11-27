@@ -1,4 +1,4 @@
-﻿using EvoCharacterManager.Models.Entities;
+using EvoCharacterManager.Models.Entities;
 using EvoCharacterManager.Models.ViewModels;
 using EvoCharacterManager.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -22,12 +22,38 @@ namespace EvoCharacterManager.Controllers
             int? selectedAssignedId, int? selectedCharacterId, int? selectedChallengeId)
         {
             var characters = await myCharacterService.GetAllCharacters();
+            var characterViewModels = new List<CharacterViewModel>();
 
-            var characterViewModels = characters.Select(c => new CharacterViewModel
+            if (selectedAssignedId == 1 || selectedAssignedId == null)
             {
-                Name = c.Name,
-                Id = c.ID,
-            }).ToList();
+                var allChallenges = await myChallengeService.GetAllChallenges();
+                
+                foreach (var character in characters)
+                {
+                    var closedChallenges = await myManagementService.GetClosedChallenges(character.ID);
+                    var assignedChallenges = await myManagementService.GetAssignedChallenges(character.ID);
+                    var availableChallenges = allChallenges
+                        .Where(c => !closedChallenges.Contains(c) && !assignedChallenges.Contains(c))
+                        .ToList();
+
+                    if (availableChallenges.Any())
+                    {
+                        characterViewModels.Add(new CharacterViewModel
+                        {
+                            Name = character.Name,
+                            Id = character.ID,
+                        });
+                    }
+                }
+            }
+            else
+            {
+                characterViewModels = characters.Select(c => new CharacterViewModel
+                {
+                    Name = c.Name,
+                    Id = c.ID,
+                }).ToList();
+            }
 
             var viewModel = new ManagementPageViewModel
             {
@@ -42,8 +68,9 @@ namespace EvoCharacterManager.Controllers
                 {
                     var allChallenges = await myChallengeService.GetAllChallenges();
                     var assignedChallenges = await myManagementService.GetAssignedChallenges(selectedCharacterId.Value);
+                    var closedChallenges = await myManagementService.GetClosedChallenges(selectedCharacterId.Value);
                     challenges = allChallenges
-                        .Where(c => !assignedChallenges.Contains(c))
+                        .Where(c => !assignedChallenges.Contains(c) && !closedChallenges.Contains(c))
                         .ToList();
                 }
                 else
@@ -97,6 +124,19 @@ namespace EvoCharacterManager.Controllers
                         viewModel.Details =
                             await myManagementService.GetManagementDetails(selectedCharacterId.Value,
                                 selectedChallengeId.Value);
+                        var currentState = await myManagementService.GetState(selectedCharacterId.Value, selectedChallengeId.Value);
+                        if (currentState != null)
+                        {
+                            viewModel.SelectedStateId = currentState switch
+                            {
+                                "Új" => ManagementPageViewModel.ChallengeState.New,
+                                "Folyamatban" => ManagementPageViewModel.ChallengeState.InProgress,
+                                "Befejezett" => ManagementPageViewModel.ChallengeState.Completed,
+                                "Felfüggesztett" => ManagementPageViewModel.ChallengeState.Suspended,
+                                "Megszakítva" => ManagementPageViewModel.ChallengeState.Cancelled,
+                                _ => ManagementPageViewModel.ChallengeState.New
+                            };
+                        }
                     }
                 }
             }
@@ -193,14 +233,45 @@ namespace EvoCharacterManager.Controllers
             character.Growth += challenge.GainableGrowth ?? 0;
             character.Care += challenge.GainableCare ?? 0;
 
-            await myManagementService.RemoveManagement(viewModel.SelectedCharacterId,
-                viewModel.SelectedChallengeId);
+            var management = await myManagementService.GetManagement(viewModel.SelectedCharacterId, viewModel.SelectedChallengeId);
+            
+            if (management != null)
+            {
+                management.IsClosed = true;
+            }
 
             await myManagementService.SaveChanges();
 
             return RedirectToAction("Management");
         }
 
+        [HttpPost]
+        public async Task<IActionResult> StateSelection(ManagementPageViewModel viewModel)
+        {
+            if (viewModel.SelectedStateId != 0)
+            {
+                await myManagementService.UpdateState(
+                    viewModel.SelectedCharacterId,
+                    viewModel.SelectedChallengeId,
+                    ManagementPageViewModel.GetStateText(viewModel.SelectedStateId)
+                );
+
+                return RedirectToAction(
+                    "Management",
+                    new
+                    {
+                        selectedAssignedId = viewModel.SelectedAssignedId,
+                        selectedCharacterId = viewModel.SelectedCharacterId,
+                        selectedChallengeId = viewModel.SelectedChallengeId
+                    });
+            }
+
+            return RedirectToAction("Management", new
+            {
+                selectedAssignedId = viewModel.SelectedAssignedId,
+                selectedCharacterId = viewModel.SelectedCharacterId
+            });
+        }
 
         private readonly IManagementService myManagementService;
         private readonly ICharacterService myCharacterService;

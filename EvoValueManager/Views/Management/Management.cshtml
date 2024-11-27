@@ -1,4 +1,4 @@
-﻿@using EvoCharacterManager.Models.ViewModels
+@using EvoCharacterManager.Models.ViewModels
 @using EvoValueManager.Models.Shared
 @model ManagementPageViewModel
 
@@ -29,6 +29,19 @@
             @Html.HiddenFor(m => m.SelectedAssignedId)
             @Html.HiddenFor(m => m.SelectedCharacterId)
             @Html.DropDownListFor(m => m.SelectedChallengeId, (SelectList)Model.SelectableChallenges, "Válassz egy kihívást",
+                new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
+        }
+    }
+
+    @if (Model.SelectedAssignedId == 2 && Model.SelectedChallenge != null)
+    {
+        @using (Html.BeginForm("StateSelection", "Management", FormMethod.Post))
+        {
+            @Html.HiddenFor(m => m.SelectedAssignedId)
+            @Html.HiddenFor(m => m.SelectedCharacterId)
+            @Html.HiddenFor(m => m.SelectedChallengeId)
+            @Html.DropDownListFor(m => m.SelectedStateId, Model.SelectableStates, 
+                Model.SelectedStateId == 0 ? "Válassz egy állapotot" : null,
                 new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
         }
     }
@@ -135,10 +148,21 @@
                     {
                         if (buttonConfig.Item1)
                         {
-                            <button type="submit" formaction="@Url.Action(buttonConfig.Item2, "Management")"
-                                    class="btn @buttonConfig.Item4">
-                                @buttonConfig.Item3
-                            </button>
+                            if (buttonConfig.Item2 == "CloseChallenge")
+                            {
+                                <button type="submit" formaction="@Url.Action(buttonConfig.Item2, "Management")"
+                                        class="btn @buttonConfig.Item4"
+                                        onclick="return confirmChallengeClose('@ManagementPageViewModel.GetStateText(Model.SelectedStateId)')">
+                                    @buttonConfig.Item3
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="submit" formaction="@Url.Action(buttonConfig.Item2, "Management")"
+                                        class="btn @buttonConfig.Item4">
+                                    @buttonConfig.Item3
+                                </button>
+                            }
                         }
                     }
                 </div>
