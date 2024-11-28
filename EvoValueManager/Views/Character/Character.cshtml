@@ -54,12 +54,26 @@
 {
     @using (Html.BeginForm("SaveNewCharacter", "Character", FormMethod.Post))
     {
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
         <div class="evo-details-margin">
             <div class="evo-flex">
                 <p class="evo-character-label">
                     <strong>Név:</strong>
                 </p>
-                @Html.TextBoxFor(m => m.NewCharacter.Name, new { @class = "evo-margin" })
+                @Html.TextBoxFor(m => m.NewCharacter.Name, new 
+                    { 
+                        @class = "evo-margin",
+                        @required = "required",
+                        @minlength = "3",
+                        @placeholder = "Add meg a nevet"
+                    }
+                )
             </div>
             <div class="evo-flex">
                 <p class="evo-character-label">
@@ -70,7 +84,7 @@
                     @class = "evo-margin",
                     @type = "number",
                     @min = "1",
-                    @max = "100"
+                    @max = "100",
                 })
             </div>
             <div class="evo-flex">
@@ -82,7 +96,7 @@
                     @class = "evo-margin",
                     @type = "number",
                     @min = "1",
-                    @max = "100"
+                    @max = "100",
                 })
             </div>
             <div class="evo-flex">
@@ -94,7 +108,7 @@
                     @class = "evo-margin",
                     @type = "number",
                     @min = "1",
-                    @max = "100"
+                    @max = "100",
                 })
             </div>
             <div class="evo-flex">
@@ -106,7 +120,7 @@
                     @class = "evo-margin",
                     @type = "number",
                     @min = "1",
-                    @max = "100"
+                    @max = "100",
                 })
             </div>
             <div class="evo-flex">
@@ -118,7 +132,7 @@
                     @class = "evo-margin",
                     @type = "number",
                     @min = "1",
-                    @max = "100"
+                    @max = "100",
                 })
             </div>
             <button type="submit" class="btn btn-primary">Mentés</button>

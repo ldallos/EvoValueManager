@@ -6,14 +6,14 @@
 
         public string Name { get; set; } = string.Empty;
 
-        public int Bravery { get; set; }
+        public int Bravery { get; set; } = 1;
 
-        public int Trust { get; set; }
+        public int Trust { get; set; } = 1;
 
-        public int Presence { get; set; }
+        public int Presence { get; set; } = 1;
+
+        public int Growth { get; set; } = 1;
         
-        public int Growth { get; set; }
-        
-        public int Care { get; set; }
+        public int Care { get; set; } = 1;
     }
 }
