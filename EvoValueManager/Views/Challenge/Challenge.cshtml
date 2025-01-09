@@ -48,87 +48,6 @@
         </table>
     </div>
 
-    <div>@Model.AddChallenge</div>
-
-    @if (Model.AddChallenge)
-    {
-        @using (Html.BeginForm("SaveNewChallenge", "Challenge", FormMethod.Post))
-        {
-            <div class="evo-details-margin">
-                <div class="evo-flex">
-                    <p class="evo-challenge-label">
-                        <strong>Név:</strong>
-                    </p>
-                    @Html.TextBoxFor(m => m.NewChallenge.Title, new { @class = "evo-margin"})
-                </div>
-                <div class="evo-flex">
-                    <p class="evo-challenge-label">
-                         <strong>Elvárt Fejlődés</strong>
-                    </p>
-                    @Html.TextBoxFor(m => m.NewChallenge.RequiredGrowth, new
-                        {
-                            @class = "evo-margin",
-                            @type = "number",
-                            @min = "1",
-                            @max = "100"
-                        })
-                </div>
-                <div class="evo-flex">
-                    <p class=" evo-challenge-label">
-                        <strong>Elvárt Gondoskodás</strong>
-                    </p>
-                    @Html.TextBoxFor(m => m.NewChallenge.RequiredCare, new
-                        {
-                            @class = "evo-margin",
-                            @type = "number",
-                            @min = "1",
-                            @max = "100"
-                        })
-                </div>
-                <div class="evo-flex">
-                    <p class=" evo-challenge-label">
-                        <strong>Elvárt Jelenlét</strong>
-                    </p>
-                    @Html.TextBoxFor(m => m.NewChallenge.RequiredPresence, new
-                        {
-                            @class = "evo-margin",
-                            @type = "number",
-                            @min = "1",
-                            @max = "100"
-                        })
-                </div>
-                <div class="evo-flex">
-                    <p class=" evo-challenge-label">
-                        <strong>Elvárt Megbízhatóság</strong>
-                    </p>
-                    @Html.TextBoxFor(m => m.NewChallenge.RequiredTrust, new
-                        {
-                            @class = "evo-margin",
-                            @type = "number",
-                            @min = "1",
-                            @max = "100"
-                        })
-                </div>
-                <div class="evo-flex">
-                    <p class=" evo-challenge-label">
-                        <strong>Elvárt Merészség</strong>
-                    </p>
-                    @Html.TextBoxFor(m => m.NewChallenge.RequiredBravery, new
-                        {
-                            @class = "evo-margin",
-                            @type = "number",
-                            @min = "1",
-                            @max = "100"
-                        })
-                </div>
-                <button type="submit" class="btn btn-primary">Mentés</button>
-            </div>
-        }
-    }
-
-    
-
-
     <button type="button" onclick="toggleDiv()" class="btn btn-primary" style="margin-top: 10px">Szerkesztés</button>
 
     <div id="editChallenge" style="display:none;">
@@ -210,4 +129,80 @@
             </div>
         }
     </div>
+}
+
+@if (Model.AddChallenge)
+{
+    @using (Html.BeginForm("SaveNewChallenge", "Challenge", FormMethod.Post))
+    {
+        <div class="evo-details-margin">
+            <div class="evo-flex">
+                <p class="evo-challenge-label">
+                    <strong>Név:</strong>
+                </p>
+                @Html.TextBoxFor(m => m.NewChallenge.Title, new { @class = "evo-margin" })
+            </div>
+            <div class="evo-flex">
+                <p class="evo-challenge-label">
+                    <strong>Elvárt Fejlődés</strong>
+                </p>
+                @Html.TextBoxFor(m => m.NewChallenge.RequiredGrowth, new
+                    {
+                        @class = "evo-margin",
+                        @type = "number",
+                        @min = "0",
+                        @max = "100"
+                    })
+            </div>
+            <div class="evo-flex">
+                <p class=" evo-challenge-label">
+                    <strong>Elvárt Gondoskodás</strong>
+                </p>
+                @Html.TextBoxFor(m => m.NewChallenge.RequiredCare, new
+                    {
+                        @class = "evo-margin",
+                        @type = "number",
+                        @min = "0",
+                        @max = "100"
+                    })
+            </div>
+            <div class="evo-flex">
+                <p class=" evo-challenge-label">
+                    <strong>Elvárt Jelenlét</strong>
+                </p>
+                @Html.TextBoxFor(m => m.NewChallenge.RequiredPresence, new
+                    {
+                        @class = "evo-margin",
+                        @type = "number",
+                        @min = "0",
+                        @max = "100"
+                    })
+            </div>
+            <div class="evo-flex">
+                <p class=" evo-challenge-label">
+                    <strong>Elvárt Megbízhatóság</strong>
+                </p>
+                @Html.TextBoxFor(m => m.NewChallenge.RequiredTrust, new
+                    {
+                        @class = "evo-margin",
+                        @type = "number",
+                        @min = "0",
+                        @max = "100"
+                    })
+            </div>
+            <div class="evo-flex">
+                <p class=" evo-challenge-label">
+                    <strong>Elvárt Merészség</strong>
+                </p>
+                @Html.TextBoxFor(m => m.NewChallenge.RequiredBravery, new
+                    {
+                        @class = "evo-margin",
+                        @type = "number",
+                        @min = "0",
+                        @max = "100"
+                    })
+            </div>
+            <button type="submit" class="btn btn-primary">Mentés</button>
+        </div>
+    }
 }

@@ -52,7 +52,7 @@ namespace EvoCharacterManager.Controllers
                 SelectedChallengeId = selectedChallengeId ?? 0,
                 SelectedChallenge = selectedChallenge,
                 SelectableChallenges = new SelectList(challengeViewModels, "Id", "Title"),
-                AddChallenge = false
+                AddChallenge = addChallenge ?? false
             };
 
             return View(viewModel);
