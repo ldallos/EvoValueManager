@@ -105,19 +105,44 @@
         }
     </div>
 
-    @using (Html.BeginForm("ManageChallenge", "Management", FormMethod.Post))
-    {
-        <div class="evo-details-margin">
-            @Html.HiddenFor(m => m.SelectedAssignedId)
-            @Html.HiddenFor(m => m.SelectedCharacterId)
-            @Html.HiddenFor(m => m.SelectedChallengeId)
-            <div class="form-group">
-                <h3>Részletek</h3>
-                <textarea id="Details" name="Details" rows="5" class="form-control">@Model.Details</textarea>
-            </div>
-            <button type="submit" class="btn btn-primary" style="margin-top: 10px">
-                @(Model.SelectedAssignedId == 1 ? "Kihívás felvétele" : "Lezárás")
-            </button>
-        </div>
-    }
+    <div class="evo-details-margin">
+        @{
+            var buttonConfigs = new List<Tuple<bool, string, string, string>>
+            {
+                Tuple.Create(Model.SelectedAssignedId == 2, "UpdateChallengeDetails", "Frissítés", "btn-secondary"),
+                Tuple.Create(Model.SelectedAssignedId == 1, "AssignChallenge", "Kihívás felvétele", "btn-primary"),
+                Tuple.Create(Model.SelectedAssignedId == 2, "CloseChallenge", "Lezárás", "btn-danger")
+            };
+            @using (Html.BeginForm("UpdateChallengeDetails", "Management", FormMethod.Post))
+            {
+                @Html.HiddenFor(m => m.SelectedAssignedId)
+                @Html.HiddenFor(m => m.SelectedCharacterId)
+                @Html.HiddenFor(m => m.SelectedChallengeId)
+                <div>
+                    <h3 style="display: inline-block; margin-right: 10px;">
+                        Részletek
+                    </h3>
+                    @if (TempData["UpdateSuccess"] != null)
+                    {
+                        <span class="text-success"> @TempData["UpdateSuccess"] </span>
+                    }
+                    <textarea id="Details" name="Details" class="form-control" rows="5"
+                  style="width: 100%">@Model.Details</textarea>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+
+                    @foreach (var buttonConfig in buttonConfigs)
+                    {
+                        if (buttonConfig.Item1)
+                        {
+                            <button type="submit" formaction="@Url.Action(buttonConfig.Item2, "Management")"
+                                    class="btn @buttonConfig.Item4">
+                                @buttonConfig.Item3
+                            </button>
+                        }
+                    }
+                </div>
+            }
+        }
+    </div>
 }
