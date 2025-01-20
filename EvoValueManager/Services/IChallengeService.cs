@@ -8,6 +8,8 @@ namespace EvoCharacterManager.Services
 
         Task<Challenge?> GetChallengeById(int id);
 
+        Task SaveNewChallenge(Challenge challenge);
+
         Task SaveChanges();
     }
 }

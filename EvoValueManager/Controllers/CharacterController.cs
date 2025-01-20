@@ -1,4 +1,4 @@
-﻿using EvoCharacterManager.Models.Entities;
+using EvoCharacterManager.Models.Entities;
 using EvoCharacterManager.Models.ViewModels;
 using EvoCharacterManager.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -80,6 +80,38 @@ namespace EvoCharacterManager.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveNewCharacter(CharacterPageViewModel viewModel)
         {
+            if (string.IsNullOrEmpty(viewModel.NewCharacter?.Name) || viewModel.NewCharacter.Name.Length < 3)
+            {
+                TempData["ErrorMessage"] = "A karakter nevének legalább 3 karakter hosszúnak kell lennie!";
+                return RedirectToAction("Character", new
+                {
+                    selectedCharacterId = viewModel.SelectedCharacterId,
+                    addCharacter = true
+                });
+            }
+
+            var validations = new List<(string PropertyName, int Value, string ErrorMessage)>
+            {
+                ("Bravery", viewModel.NewCharacter.Bravery, "A karakter merészségének 1 és 100 közötti értéket lehet megadni"),
+                ("Trust", viewModel.NewCharacter.Trust, "A karakter megbízhatóságának 1 és 100 közötti értéket lehet megadni"),
+                ("Presence", viewModel.NewCharacter.Presence, "A karakter jelenlétének 1 és 100 közötti értéket lehet megadni"),
+                ("Growth", viewModel.NewCharacter.Growth, "A karakter fejlődésének 1 és 100 közötti értéket lehet megadni"),
+                ("Care", viewModel.NewCharacter.Care, "A karakter gondoskodásának 1 és 100 közötti értéket lehet megadni"),
+            };
+
+            foreach (var validation in validations)
+            {
+                if (validation.Value < 1 || validation.Value > 100)
+                {
+                    TempData["ErrorMessage"] = validation.ErrorMessage;
+                    return RedirectToAction("Character", new
+                    {
+                        selectedCharacterId = viewModel.SelectedCharacterId,
+                        addCharacter = true
+                    });
+                }
+            }
+
             Character character = new Character
             {
                 Name = viewModel.NewCharacter.Name,
