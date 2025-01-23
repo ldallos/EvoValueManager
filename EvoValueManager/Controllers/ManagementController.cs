@@ -19,129 +19,168 @@ namespace EvoCharacterManager.Controllers
         }
 
         public async Task<IActionResult> Management(
-            int? selectedAssignedId, int? selectedCharacterId, int? selectedChallengeId)
+            int? selectedAssignedId, 
+            int? selectedCharacterId,
+            int? selectedChallengeId)
         {
-            var characters = await myCharacterService.GetAllCharacters();
-            var characterViewModels = new List<CharacterViewModel>();
-
-            if (selectedAssignedId == 1 || selectedAssignedId == null)
-            {
-                var allChallenges = await myChallengeService.GetAllChallenges();
-                
-                foreach (var character in characters)
-                {
-                    var closedChallenges = await myManagementService.GetClosedChallenges(character.ID);
-                    var assignedChallenges = await myManagementService.GetAssignedChallenges(character.ID);
-                    var availableChallenges = allChallenges
-                        .Where(c => !closedChallenges.Contains(c) && !assignedChallenges.Contains(c))
-                        .ToList();
-
-                    if (availableChallenges.Any())
-                    {
-                        characterViewModels.Add(new CharacterViewModel
-                        {
-                            Name = character.Name,
-                            Id = character.ID,
-                        });
-                    }
-                }
-            }
-            else
-            {
-                characterViewModels = characters.Select(c => new CharacterViewModel
-                {
-                    Name = c.Name,
-                    Id = c.ID,
-                }).ToList();
-            }
-
-            var viewModel = new ManagementPageViewModel
-            {
-                SelectedAssignedId = selectedAssignedId ?? 1,
-                SelectableCharacters = new SelectList(characterViewModels, "Id", "Name")
-            };
+            var viewModel = await InitializeViewModel(selectedAssignedId, selectedCharacterId);
 
             if (selectedCharacterId.HasValue)
             {
-                List<Challenge> challenges;
-                if (viewModel.SelectedAssignedId == 1)
-                {
-                    var allChallenges = await myChallengeService.GetAllChallenges();
-                    var assignedChallenges = await myManagementService.GetAssignedChallenges(selectedCharacterId.Value);
-                    var closedChallenges = await myManagementService.GetClosedChallenges(selectedCharacterId.Value);
-                    challenges = allChallenges
-                        .Where(c => !assignedChallenges.Contains(c) && !closedChallenges.Contains(c))
-                        .ToList();
-                }
-                else
-                {
-                    challenges = await myManagementService.GetAssignedChallenges(selectedCharacterId.Value);
-                }
-
-                var challengeViewModels = challenges.Select(c => new ChallengeViewModel
-                {
-                    Id = c.ID,
-                    Title = c.Title
-                }).ToList();
-
-                viewModel.SelectableChallenges = new SelectList(challengeViewModels, "Id", "Title");
-
-                var character = await myCharacterService.GetCharacterById(selectedCharacterId.Value);
-                if (character != null)
-                {
-                    viewModel.SelectedCharacter = new CharacterViewModel
-                    {
-                        Id = character.ID,
-                        Name = character.Name,
-                        Bravery = character.Bravery,
-                        Trust = character.Trust,
-                        Presence = character.Presence,
-                        Growth = character.Growth,
-                        Care = character.Care
-                    };
-                }
-
-                if (selectedChallengeId.HasValue)
-                {
-                    var challenge = await myChallengeService.GetChallengeById(selectedChallengeId.Value);
-                    if (challenge != null)
-                    {
-                        viewModel.SelectedChallenge = new ChallengeViewModel
-                        {
-                            Id = challenge.ID,
-                            Title = challenge.Title,
-                            RequiredBravery = challenge.RequiredBravery,
-                            RequiredTrust = challenge.RequiredTrust,
-                            RequiredPresence = challenge.RequiredPresence,
-                            RequiredCare = challenge.RequiredCare,
-                            RequiredGrowth = challenge.RequiredGrowth,
-                            GainableBravery = challenge.GainableBravery,
-                            GainableTrust = challenge.GainableTrust,
-                            GainablePresence = challenge.GainablePresence,
-                            GainableCare = challenge.GainableCare,
-                            GainableGrowth = challenge.GainableGrowth
-                        };
-                        viewModel.Details =
-                            await myManagementService.GetManagementDetails(selectedCharacterId.Value,
-                                selectedChallengeId.Value);
-                        var currentState = await myManagementService.GetState(selectedCharacterId.Value, selectedChallengeId.Value);
-                        if (currentState != null)
-                        {
-                            viewModel.SelectedStateId = currentState switch
-                            {
-                                "Új" => ManagementPageViewModel.ChallengeState.New,
-                                "Folyamatban" => ManagementPageViewModel.ChallengeState.InProgress,
-                                "Befejezett" => ManagementPageViewModel.ChallengeState.Completed,
-                                "Felfüggesztett" => ManagementPageViewModel.ChallengeState.Suspended,
-                                "Megszakítva" => ManagementPageViewModel.ChallengeState.Cancelled,
-                                _ => ManagementPageViewModel.ChallengeState.New
-                            };
-                        }
-                    }
-                }
+                await PopulateCharacterRelatedData(viewModel, selectedCharacterId.Value, selectedChallengeId);
             }
 
             return View(viewModel);
+        }
+
+        private async Task<ManagementPageViewModel> InitializeViewModel(int? selectedAssignedId, int? selectedCharacterId)
+        {
+            var characters = await myCharacterService.GetAllCharacters();
+            var characterViewModels = await GetFilteredCharacterViewModels(characters, selectedAssignedId);
+
+            return new ManagementPageViewModel
+            {
+                SelectedAssignedId = selectedAssignedId ?? 1,
+                SelectedCharacterId = selectedCharacterId ?? 0,
+                SelectableCharacters = new SelectList(characterViewModels, "Id", "Name")
+            };
+        }
+
+        private async Task<List<CharacterViewModel>> GetFilteredCharacterViewModels(
+            IEnumerable<Character> characters,
+            int? selectedAssignedId)
+        {
+            var characterList = new List<CharacterViewModel>();
+            var allChallenges = await myChallengeService.GetAllChallenges();
+
+            foreach (var character in characters)
+            {
+                var assignedChallenges = await myManagementService.GetAssignedChallenges(character.ID);
+                var closedChallenges = await myManagementService.GetClosedChallenges(character.ID);
+                
+                bool shouldIncludeCharacter = selectedAssignedId is null or 1
+                    ? allChallenges.Any(c =>
+                        !assignedChallenges.Contains(c) &&
+                        !closedChallenges.Contains(c))
+                    : selectedAssignedId != 2 || assignedChallenges.Count != 0;
+
+                if (shouldIncludeCharacter)
+                {
+                    characterList.Add(CreateCharacterViewModel(character));
+                }
+            }
+
+            return characterList;
+        }
+
+        private static CharacterViewModel CreateCharacterViewModel(Character character) =>
+            new()
+            {
+                Name = character.Name,
+                Id = character.ID,
+                Bravery = character.Bravery,
+                Trust = character.Trust,
+                Presence = character.Presence,
+                Growth = character.Growth,
+                Care = character.Care
+            };
+
+        private async Task PopulateCharacterRelatedData(ManagementPageViewModel viewModel, int selectedCharacterId,
+            int? selectedChallengeId)
+        {
+            await PopulateSelectableChallenges(viewModel, selectedCharacterId);
+            await PopulateSelectedCharacter(viewModel, selectedCharacterId);
+
+            if (selectedChallengeId.HasValue)
+            {
+                await PopulateSelectedChallenge(viewModel, selectedCharacterId, selectedChallengeId.Value);
+            }
+        }
+
+        private async Task PopulateSelectableChallenges(ManagementPageViewModel viewModel, int selectedCharacterId)
+        {
+            var challenges =
+                await GetChallengesBasedOnAssignmentType(viewModel.SelectedAssignedId, selectedCharacterId);
+            var challengeViewModels = challenges.Select(CreateChallengeViewModel).ToList();
+            viewModel.SelectableChallenges = new SelectList(challengeViewModels, "Id", "Title");
+        }
+
+        private async Task<List<Challenge>> GetChallengesBasedOnAssignmentType(int selectedAssignedId, int characterId)
+        {
+            if (selectedAssignedId == 1)
+            {
+                var allChallenges = await myChallengeService.GetAllChallenges();
+                var assignedChallenges = await myManagementService.GetAssignedChallenges(characterId);
+                var closedChallenges = await myManagementService.GetClosedChallenges(characterId);
+
+                return allChallenges
+                    .Where(c => !assignedChallenges.Contains(c) && !closedChallenges.Contains(c))
+                    .ToList();
+            }
+    
+            return await myManagementService.GetAssignedChallenges(characterId);
+        }
+
+        private static ChallengeViewModel CreateChallengeViewModel(Challenge challenge) =>
+            new()
+            {
+                Id = challenge.ID,
+                Title = challenge.Title,
+                RequiredBravery = challenge.RequiredBravery,
+                RequiredTrust = challenge.RequiredTrust,
+                RequiredPresence = challenge.RequiredPresence,
+                RequiredCare = challenge.RequiredCare,
+                RequiredGrowth = challenge.RequiredGrowth,
+                GainableBravery = challenge.GainableBravery,
+                GainableTrust = challenge.GainableTrust,
+                GainablePresence = challenge.GainablePresence,
+                GainableCare = challenge.GainableCare,
+                GainableGrowth = challenge.GainableGrowth
+            };
+
+        private async Task PopulateSelectedCharacter(ManagementPageViewModel viewModel, int selectedCharacterId)
+        {
+            var character = await myCharacterService.GetCharacterById(selectedCharacterId);
+            if (character != null)
+            {
+                viewModel.SelectedCharacter = CreateCharacterViewModel(character);
+            }
+        }
+
+        private async Task PopulateSelectedChallenge(ManagementPageViewModel viewModel, int selectedCharacterId,
+            int selectedChallengeId)
+        {
+            var challenge = await myChallengeService.GetChallengeById(selectedChallengeId);
+            if (challenge != null)
+            {
+                viewModel.SelectedChallenge = CreateChallengeViewModel(challenge);
+                viewModel.Details =
+                    await myManagementService.GetManagementDetails(selectedCharacterId, selectedChallengeId);
+                await PopulateChallengeState(viewModel, selectedCharacterId, selectedChallengeId);
+            }
+        }
+
+        private async Task PopulateChallengeState(ManagementPageViewModel viewModel, int selectedCharacterId,
+            int selectedChallengeId)
+        {
+            var currentState = await myManagementService.GetState(selectedCharacterId, selectedChallengeId);
+            if (currentState != null)
+            {
+                viewModel.SelectedStateId = MapStateStringToEnum(currentState);
+            }
+        }
+
+        private static ManagementPageViewModel.ChallengeState MapStateStringToEnum(string state)
+        {
+            return Enum.GetValues<ManagementPageViewModel.ChallengeState>()
+                .FirstOrDefault(enumValue => 
+                        ManagementPageViewModel.GetStateText(enumValue) == state,
+                    ManagementPageViewModel.ChallengeState.New);
+        }
+        
+        private bool IsStatSufficient(int characterStat, int? requiredStat)
+        {
+            return requiredStat == null || characterStat >= requiredStat;
         }
 
         [HttpPost]
@@ -189,11 +228,12 @@ namespace EvoCharacterManager.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdateChallengeDetails(ManagementPageViewModel viewModel)
         {
-            await myManagementService.UpdateManagementDetails(
-                viewModel.SelectedCharacterId,
-                viewModel.SelectedChallengeId,
-                viewModel.Details
-            );
+            await myManagementService.UpdateManagementDetails(viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, viewModel.Details);
+    
+            if (viewModel.SelectedStateId != 0)
+            {
+                await myManagementService.UpdateState(viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, ManagementPageViewModel.GetStateText(viewModel.SelectedStateId));
+            }
 
             TempData["UpdateSuccess"] = "Sikeresen frissítve";
 
@@ -201,19 +241,41 @@ namespace EvoCharacterManager.Controllers
             {
                 selectedAssignedId = viewModel.SelectedAssignedId,
                 selectedCharacterId = viewModel.SelectedCharacterId,
-                selectedChallengeId = viewModel.SelectedChallengeId
+                selectedChallengeId = viewModel.SelectedChallengeId,
+                selectedStateId = viewModel.SelectedStateId
             });
         }
 
         [HttpPost]
         public async Task<IActionResult> AssignChallenge(ManagementPageViewModel viewModel)
         {
-            await myManagementService.AssignChallenge(
-                viewModel.SelectedCharacterId,
-                viewModel.SelectedChallengeId,
-                viewModel.Details
-            );
+            var character = await myCharacterService.GetCharacterById(viewModel.SelectedCharacterId);
+            var challenge = await myChallengeService.GetChallengeById(viewModel.SelectedChallengeId);
 
+            if (character == null || challenge == null)
+            {
+                return RedirectToAction("Management");
+            }
+
+            var insufficientStats = new List<string>();
+            if (!IsStatSufficient(character.Growth, challenge.RequiredGrowth)) insufficientStats.Add("fejlődés");
+            if (!IsStatSufficient(character.Care, challenge.RequiredCare)) insufficientStats.Add("gondoskodás");
+            if (!IsStatSufficient(character.Presence, challenge.RequiredPresence)) insufficientStats.Add("jelenlét");
+            if (!IsStatSufficient(character.Bravery, challenge.RequiredBravery)) insufficientStats.Add("merészség");
+            if (!IsStatSufficient(character.Trust, challenge.RequiredTrust)) insufficientStats.Add("megbízhatóság");
+            
+            if (insufficientStats.Count != 0)
+            {
+                TempData["ErrorMessage"] = $"A karakternek nincs elég {string.Join(", ", insufficientStats)} a kihívás felvételéhez!";
+                return RedirectToAction("Management", new
+                {
+                    selectedAssignedId = viewModel.SelectedAssignedId,
+                    selectedCharacterId = viewModel.SelectedCharacterId,
+                    selectedChallengeId = viewModel.SelectedChallengeId
+                });
+            }
+
+            await myManagementService.AssignChallenge(viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, viewModel.Details);
             await myManagementService.SaveChanges();
 
             return RedirectToAction("Management");
@@ -243,34 +305,6 @@ namespace EvoCharacterManager.Controllers
             await myManagementService.SaveChanges();
 
             return RedirectToAction("Management");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> StateSelection(ManagementPageViewModel viewModel)
-        {
-            if (viewModel.SelectedStateId != 0)
-            {
-                await myManagementService.UpdateState(
-                    viewModel.SelectedCharacterId,
-                    viewModel.SelectedChallengeId,
-                    ManagementPageViewModel.GetStateText(viewModel.SelectedStateId)
-                );
-
-                return RedirectToAction(
-                    "Management",
-                    new
-                    {
-                        selectedAssignedId = viewModel.SelectedAssignedId,
-                        selectedCharacterId = viewModel.SelectedCharacterId,
-                        selectedChallengeId = viewModel.SelectedChallengeId
-                    });
-            }
-
-            return RedirectToAction("Management", new
-            {
-                selectedAssignedId = viewModel.SelectedAssignedId,
-                selectedCharacterId = viewModel.SelectedCharacterId
-            });
         }
 
         private readonly IManagementService myManagementService;

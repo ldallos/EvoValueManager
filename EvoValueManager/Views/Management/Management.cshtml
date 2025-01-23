@@ -32,25 +32,19 @@
                 new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
         }
     }
-
-    @if (Model.SelectedAssignedId == 2 && Model.SelectedChallenge != null)
-    {
-        @using (Html.BeginForm("StateSelection", "Management", FormMethod.Post))
-        {
-            @Html.HiddenFor(m => m.SelectedAssignedId)
-            @Html.HiddenFor(m => m.SelectedCharacterId)
-            @Html.HiddenFor(m => m.SelectedChallengeId)
-            @Html.DropDownListFor(m => m.SelectedStateId, Model.SelectableStates, 
-                Model.SelectedStateId == 0 ? "Válassz egy állapotot" : null,
-                new { @class = "form-control evo-margin evo-dropdown", onchange = "this.form.submit();" })
-        }
-    }
+    
 </div>
 
 @if (Model.SelectedCharacter != null && Model.SelectedChallenge != null)
 {
     <div class="evo-details-margin">
-        <h3>Elvárások</h3>
+        <h3>Elvárások
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <span class="text-danger" style="font-size: 0.75em"> @TempData["ErrorMessage"] </span>
+            }
+            </h3>
+
         @foreach (var trait in Constants.Traits.Values)
         {
             <div class="evo-flex">
@@ -139,6 +133,11 @@
                     {
                         <span class="text-success"> @TempData["UpdateSuccess"] </span>
                     }
+                    
+                    @Html.DropDownListFor(m => m.SelectedStateId, Model.SelectableStates,
+                        Model.SelectedStateId == 0 ? "Válassz egy állapotot" : null,
+                        new { @class = "form-control evo-margin evo-dropdown" })
+                    
                     <textarea id="Details" name="Details" class="form-control" rows="5"
                   style="width: 100%">@Model.Details</textarea>
                 </div>
