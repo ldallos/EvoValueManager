@@ -4,7 +4,7 @@ namespace EvoCharacterManager.Services
 {
     public interface IManagementService
     {
-        Task AssignChallenge(int characterId, int challengeId, string? details = null);
+        Task AssignChallenge(int characterId, int challengeId, int stateId, string? details = null);
 
         Task<List<Challenge>> GetAssignedChallenges(int characterId);
 

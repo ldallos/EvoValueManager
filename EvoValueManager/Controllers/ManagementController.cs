@@ -1,6 +1,7 @@
 using EvoCharacterManager.Models.Entities;
 using EvoCharacterManager.Models.ViewModels;
 using EvoCharacterManager.Services;
+using EvoValueManager.Models.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -166,16 +167,23 @@ namespace EvoCharacterManager.Controllers
             var currentState = await myManagementService.GetState(selectedCharacterId, selectedChallengeId);
             if (currentState != null)
             {
-                viewModel.SelectedStateId = MapStateStringToEnum(currentState);
+                viewModel.SelectedStateId = MapStateToId(currentState);
             }
         }
 
-        private static ManagementPageViewModel.ChallengeState MapStateStringToEnum(string state)
+        private static int MapStateToId(string state)
         {
-            return Enum.GetValues<ManagementPageViewModel.ChallengeState>()
-                .FirstOrDefault(enumValue => 
-                        ManagementPageViewModel.GetStateText(enumValue) == state,
-                    ManagementPageViewModel.ChallengeState.New);
+            if (state == Resources.ChallengeState_New)
+                return 1;
+            if (state == Resources.ChallengeState_InProgress)
+                return 2;
+            if (state == Resources.ChallengeState_Completed)
+                return 3;
+            if (state == Resources.ChallengeState_Suspended)
+                return 4;
+            if (state == Resources.ChallengeState_Cancelled)
+                return 5;
+            return 1;
         }
         
         private bool IsStatSufficient(int characterStat, int? requiredStat)
@@ -235,7 +243,7 @@ namespace EvoCharacterManager.Controllers
                 await myManagementService.UpdateState(viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, ManagementPageViewModel.GetStateText(viewModel.SelectedStateId));
             }
 
-            TempData["UpdateSuccess"] = "Sikeresen frissítve";
+            TempData["UpdateSuccess"] = Resources.UpdateSuccess;
 
             return RedirectToAction("Management", new
             {
@@ -258,15 +266,15 @@ namespace EvoCharacterManager.Controllers
             }
 
             var insufficientStats = new List<string>();
-            if (!IsStatSufficient(character.Growth, challenge.RequiredGrowth)) insufficientStats.Add("fejlődés");
-            if (!IsStatSufficient(character.Care, challenge.RequiredCare)) insufficientStats.Add("gondoskodás");
-            if (!IsStatSufficient(character.Presence, challenge.RequiredPresence)) insufficientStats.Add("jelenlét");
-            if (!IsStatSufficient(character.Bravery, challenge.RequiredBravery)) insufficientStats.Add("merészség");
-            if (!IsStatSufficient(character.Trust, challenge.RequiredTrust)) insufficientStats.Add("megbízhatóság");
+            if (!IsStatSufficient(character.Growth, challenge.RequiredGrowth)) insufficientStats.Add(Resources.Value_Growth.ToLower());
+            if (!IsStatSufficient(character.Care, challenge.RequiredCare)) insufficientStats.Add(Resources.Value_Care.ToLower());
+            if (!IsStatSufficient(character.Presence, challenge.RequiredPresence)) insufficientStats.Add(Resources.Value_Presence.ToLower());
+            if (!IsStatSufficient(character.Bravery, challenge.RequiredBravery)) insufficientStats.Add(Resources.Value_Bravery.ToLower());
+            if (!IsStatSufficient(character.Trust, challenge.RequiredTrust)) insufficientStats.Add(Resources.Value_Trust.ToLower());
             
             if (insufficientStats.Count != 0)
             {
-                TempData["ErrorMessage"] = $"A karakternek nincs elég {string.Join(", ", insufficientStats)} a kihívás felvételéhez!";
+                TempData["ErrorMessage"] = string.Format(Resources.InsufficientStats, string.Join(", ", insufficientStats.ToArray()).ToLower());
                 return RedirectToAction("Management", new
                 {
                     selectedAssignedId = viewModel.SelectedAssignedId,
@@ -275,7 +283,7 @@ namespace EvoCharacterManager.Controllers
                 });
             }
 
-            await myManagementService.AssignChallenge(viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, viewModel.Details);
+            await myManagementService.AssignChallenge(viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, viewModel.SelectedStateId, viewModel.Details);
             await myManagementService.SaveChanges();
 
             return RedirectToAction("Management");

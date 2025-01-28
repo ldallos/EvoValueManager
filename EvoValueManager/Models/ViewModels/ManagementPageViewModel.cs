@@ -1,17 +1,10 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
+using EvoValueManager.Models.Shared;
 
 namespace EvoCharacterManager.Models.ViewModels
 {
     public class ManagementPageViewModel
     {
-        public enum ChallengeState
-        {
-            New = 1,        // Új
-            InProgress = 2, // Folyamatban
-            Completed = 3,  // Befejezett
-            Suspended = 4,  // Felfüggesztett
-            Cancelled = 5   // Megszakítva
-        }
 
         public int SelectedAssignedId { get; set; }
 
@@ -44,7 +37,7 @@ namespace EvoCharacterManager.Models.ViewModels
         
         public string? Details { get; set; }
 
-        public ChallengeState SelectedStateId { get; set; }
+        public int SelectedStateId { get; set; }
 
         public SelectList SelectableStates
         {
@@ -53,27 +46,27 @@ namespace EvoCharacterManager.Models.ViewModels
                 return new SelectList(
                     new List<SelectListItem>
                     {
-                        new SelectListItem("Új", ((int)ChallengeState.New).ToString()),
-                        new SelectListItem("Folyamatban", ((int)ChallengeState.InProgress).ToString()),
-                        new SelectListItem("Befejezett", ((int)ChallengeState.Completed).ToString()),
-                        new SelectListItem("Felfüggesztett", ((int)ChallengeState.Suspended).ToString()),
-                        new SelectListItem("Megszakítva", ((int)ChallengeState.Cancelled).ToString())
+                        new SelectListItem(Resources.ChallengeState_New, "1"),
+                        new SelectListItem(Resources.ChallengeState_InProgress, "2"),
+                        new SelectListItem(Resources.ChallengeState_Completed, "3"),
+                        new SelectListItem(Resources.ChallengeState_Suspended, "4"),
+                        new SelectListItem(Resources.ChallengeState_Cancelled, "5")
                     },
                     "Value",
                     "Text");
             }
         }
 
-        public static string GetStateText(ChallengeState state)
+        public static string GetStateText(int stateId)
         {
-            return state switch
+            return stateId switch
             {
-                ChallengeState.New => "Új",
-                ChallengeState.InProgress => "Folyamatban",
-                ChallengeState.Completed => "Befejezett",
-                ChallengeState.Suspended => "Felfüggesztett",
-                ChallengeState.Cancelled => "Megszakítva",
-                _ => "Új"
+                1 => Resources.ChallengeState_New,
+                2 => Resources.ChallengeState_InProgress,
+                3 => Resources.ChallengeState_Completed,
+                4 => Resources.ChallengeState_Suspended,
+                5 => Resources.ChallengeState_Cancelled,
+                _ => Resources.ChallengeState_New
             };
         }
     }

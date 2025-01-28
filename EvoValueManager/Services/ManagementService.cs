@@ -14,14 +14,14 @@ namespace EvoCharacterManager.Services
             context.Database.EnsureCreated();
         }
 
-        public async Task AssignChallenge(int characterId, int challengeId, string details)
+        public async Task AssignChallenge(int characterId, int challengeId, int stateId, string? details)
         {
             await myContext.Managements.AddAsync(
                 new Management
                 {
                     CharacterId = characterId,
                     ChallangeId = challengeId,
-                    State = ManagementPageViewModel.GetStateText(ManagementPageViewModel.ChallengeState.New),
+                    State = ManagementPageViewModel.GetStateText(stateId),
                     Details = details
                 }
             );
