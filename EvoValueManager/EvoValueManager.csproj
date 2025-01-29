@@ -12,5 +12,20 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.8"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8"/>
     </ItemGroup>
+    
+    <ItemGroup>
+      <EmbeddedResource Update="Models\Shared\Resources.resx">
+        <Generator>PublicResXFileCodeGenerator</Generator>
+        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Compile Update="Models\Shared\Resources.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Resources.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
 
 </Project>

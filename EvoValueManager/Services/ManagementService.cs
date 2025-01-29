@@ -1,4 +1,4 @@
-﻿using EvoCharacterManager.Data;
+using EvoCharacterManager.Data;
 using EvoCharacterManager.Models.Entities;
 using EvoCharacterManager.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -14,14 +14,14 @@ namespace EvoCharacterManager.Services
             context.Database.EnsureCreated();
         }
 
-        public async Task AssignChallenge(int characterId, int challengeId, string details)
+        public async Task AssignChallenge(int characterId, int challengeId, int stateId, string? details)
         {
             await myContext.Managements.AddAsync(
                 new Management
                 {
                     CharacterId = characterId,
                     ChallangeId = challengeId,
-                    State = "Assigned",
+                    State = ManagementPageViewModel.GetStateText(stateId),
                     Details = details
                 }
             );
@@ -29,17 +29,18 @@ namespace EvoCharacterManager.Services
 
         public async Task<List<Challenge>> GetAssignedChallenges(int characterId)
         {
-            List<Management> mangagements = await myContext.Managements
-                .Where(management => management.CharacterId == characterId)
+            List<Management> managements = await myContext.Managements
+                .Where(management => management.CharacterId == characterId 
+                    && management.IsClosed != true)  
                 .ToListAsync();
 
             List<Challenge> challenges = new List<Challenge>();
-            foreach (Management management in mangagements)
+            foreach (Management management in managements)
             {
-                Challenge? challange = await myChallengeService.GetChallengeById(management.ChallangeId);
-                if (challange != null)
+                Challenge? challenge = await myChallengeService.GetChallengeById(management.ChallangeId);
+                if (challenge != null)
                 {
-                    challenges.Add(challange);
+                    challenges.Add(challenge);
                 }
             }
 
@@ -54,6 +55,11 @@ namespace EvoCharacterManager.Services
             return management?.Details ?? string.Empty;
         }
 
+        public async Task<Management?> GetManagement(int characterId, int challengeId)
+        {
+            return await myContext.Managements
+                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallangeId == challengeId);
+        }
 
         public async Task RemoveManagement(int characterId, int challengeId)
         {
@@ -75,10 +81,49 @@ namespace EvoCharacterManager.Services
             }
         }
 
+        public async Task UpdateState(int characterId, int challengeId, string state)
+        {
+            var managementEntry = await myContext.Managements
+                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallangeId == challengeId);
+
+            if (managementEntry != null)
+            {
+                managementEntry.State = state;
+                await myContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task<string?> GetState(int characterId, int challengeId)
+        {
+            var managementEntry = await myContext.Managements
+                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallangeId == challengeId);
+
+            return managementEntry?.State;
+        }
 
         public async Task SaveChanges()
         {
             await myContext.SaveChangesAsync();
+        }
+
+        public async Task<List<Challenge>> GetClosedChallenges(int characterId)
+        {
+            List<Management> managements = await myContext.Managements
+                .Where(management => management.CharacterId == characterId 
+                    && management.IsClosed == true)
+                .ToListAsync();
+
+            List<Challenge> challenges = new List<Challenge>();
+            foreach (Management management in managements)
+            {
+                Challenge? challenge = await myChallengeService.GetChallengeById(management.ChallangeId);
+                if (challenge != null)
+                {
+                    challenges.Add(challenge);
+                }
+            }
+
+            return challenges;
         }
 
         private readonly CharacterManagerContext myContext;

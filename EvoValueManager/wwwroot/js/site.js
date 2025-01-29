@@ -6,3 +6,10 @@
         formDiv.style.display = "none";
     }
 }
+
+function confirmChallengeClose(state) {
+    if (state !== "Befejezett" && state !== "Megszakítva") {
+        return confirm("Figyelem! A kihívás még nincs befejezve vagy megszakítva. Biztosan le szeretnéd zárni?");
+    }
+    return true;
+}

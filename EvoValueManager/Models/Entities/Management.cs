@@ -18,5 +18,7 @@ namespace EvoCharacterManager.Models.Entities
 
         [Column("details")]
         public string? Details { get; set; }
+
+        public bool IsClosed { get; set; }
     }
 }
