@@ -27,6 +27,11 @@ namespace EvoCharacterManager.Services
             await myContext.Characters.AddAsync(character);
             await myContext.SaveChangesAsync();
         }
+        
+        public async Task SaveCharacterChange(Character character)
+        {
+            await myContext.SaveChangesAsync();
+        }
 
         public async Task SaveChanges()
         {
