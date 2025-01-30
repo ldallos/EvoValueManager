@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300&display=swap');
+
 html {
     font-size: 14px;
 }
@@ -19,6 +21,12 @@ html {
 
 body {
     margin-bottom: 60px;
+    font-family: 'Poppins', sans-serif;
+    color: #575757;
+}
+
+h2 {
+    font-weight: bold;
 }
 
 .evo-margin {
@@ -36,9 +44,26 @@ body {
 }
 
 .evo-dropdown {
-    background-color: #f5f5f5;
-    width: fit-content;
-    block-size: fit-content;
+    width: 15em;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-shadow: 3px 3px 2px 0 #E2E2E2;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3e%3cpath fill='rgba(0,0,0,0.54)' d='M7 10l5 5 5-5z'/%3e%3c/svg%3e"); /* Add custom arrow */
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 1.5em 1.5em;
+    padding-right: 30px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.evo-dropdown:hover {
+    border-color: #619621; 
 }
 
 .evo-character-label {
@@ -64,4 +89,87 @@ body {
 
 .bg-evosoft {
     background-color: rgb(97, 150, 33);
+}
+
+.management-details {
+    display: flex;
+    align-items: center;
+    position: relative;
+    max-width: 100%;
+}
+
+.svg_icon {
+    position: absolute;
+    left: 10px;
+    fill: #619621;
+    width: 18px;
+    height: 18px;
+}
+
+textarea[name="Details"] {
+    font-size: 18px;
+    padding: 10px 10px;
+    width: 100%;
+    padding-left: 35px;
+    outline: none;
+    background: #FFFFFF;
+    color: #575757;
+    border: 1px solid #619621;
+    box-shadow: 3px 3px 2px 0 #E2E2E2;
+    border-radius: 10px;
+    transition: .3s ease;
+}
+
+textarea[name="Details"]:focus {
+    outline: none !important;
+    background: #F2F2F2;
+    border: 1px solid #619621;
+    border-radius: 10px;
+}
+
+textarea[name="Details"]::placeholder {
+    color: #DDDDDD;
+}
+
+.form-control:focus{
+    border-color: #cccccc;
+    -webkit-box-shadow: none;
+    box-shadow: 3px 3px 2px 0 #E2E2E2;
+}
+
+.navbar{
+    background: linear-gradient(to bottom, rgb(97, 150, 33), transparent);
+    height: 80px;
+    border: none !important;
+    padding-left: 60px;
+}
+
+.navbar a {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+    position: relative;
+    padding: 5px 0;
+}
+
+.navbar a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 1px;
+    background-color: white;
+    transform: scaleX(0);
+    transform-origin: bottom right;
+    transition: transform 0.3s ease;
+}
+
+.navbar a:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
+.navbar .navbar-nav .nav-item .nav-link.active::after {
+    transform: scaleX(1);
 }
