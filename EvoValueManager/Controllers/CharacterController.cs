@@ -144,7 +144,7 @@ namespace EvoCharacterManager.Controllers
                 await myService.SaveChanges();
             }
 
-            return RedirectToAction("Character", new { selectedChallengeId = viewModel.SelectedCharacterId });
+            return RedirectToAction("Character", new { selectedCharacterId = viewModel.SelectedCharacterId });
         }
     }
 }
