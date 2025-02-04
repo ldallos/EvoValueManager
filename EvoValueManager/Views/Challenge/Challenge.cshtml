@@ -71,7 +71,10 @@
                     </p>
                     @Html.TextBoxFor(m => Model.SelectedChallenge.Title, new
                     {
-                        @class = "evo-margin"
+                        @class = "evo-margin",
+                        @required = "required",
+                        @minlength = "3",
+                        @placeholder = "Add meg a kihívás nevét"
                     })
                 </div>
                 <div class="evo-flex">
@@ -221,7 +224,12 @@
                 <p class="evo-challenge-label">
                     <strong>Név:</strong>
                 </p>
-                @Html.TextBoxFor(m => m.NewChallenge.Title, new { @class = "evo-margin" })
+                @Html.TextBoxFor(m => m.NewChallenge.Title, new { 
+                    @class = "evo-margin",
+                    @required = "required",
+                    @minlength = "3",
+                    @placeholder = "Add meg a kihívás nevét"
+                })
             </div>
             <div class="evo-flex">
                 <p class="evo-challenge-label">
