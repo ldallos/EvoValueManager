@@ -6,13 +6,3 @@
         formDiv.style.display = "none";
     }
 }
-
-function confirmChallengeClose(selectedStateText) {
-    const forbiddenStates = ["Befejezett", "Megszakítva"];
-
-    if (!forbiddenStates.includes(selectedStateText)) {
-        return confirm("Figyelem! A kihívás még nincs befejezve vagy megszakítva. Biztosan le szeretnéd zárni?");
-    } else {
-        return true;
-    }
-}
