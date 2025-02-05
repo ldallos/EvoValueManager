@@ -76,6 +76,11 @@ namespace EvoCharacterManager.Controllers
                 challenge.RequiredPresence = viewModel.SelectedChallenge.RequiredPresence;
                 challenge.RequiredGrowth = viewModel.SelectedChallenge.RequiredGrowth;
                 challenge.RequiredCare = viewModel.SelectedChallenge.RequiredCare;
+                challenge.GainableBravery = viewModel.SelectedChallenge.GainableBravery;
+                challenge.GainableTrust = viewModel.SelectedChallenge.GainableTrust;
+                challenge.GainablePresence = viewModel.SelectedChallenge.GainablePresence;
+                challenge.GainableGrowth = viewModel.SelectedChallenge.GainableGrowth;
+                challenge.GainableCare = viewModel.SelectedChallenge.GainableCare;
 
                 await myService.SaveChanges();
             }
@@ -98,7 +103,12 @@ namespace EvoCharacterManager.Controllers
                 RequiredTrust = viewModel.NewChallenge.RequiredTrust,
                 RequiredPresence = viewModel.NewChallenge.RequiredPresence,
                 RequiredGrowth = viewModel.NewChallenge.RequiredGrowth,
-                RequiredCare = viewModel.NewChallenge.RequiredCare
+                RequiredCare = viewModel.NewChallenge.RequiredCare,
+                GainableBravery = viewModel.NewChallenge.GainableBravery,
+                GainableTrust = viewModel.NewChallenge.GainableTrust,
+                GainablePresence = viewModel.NewChallenge.GainablePresence,
+                GainableGrowth = viewModel.NewChallenge.GainableGrowth,
+                GainableCare = viewModel.NewChallenge.GainableCare
             };
             await myService.SaveNewChallenge(challenge);
             return RedirectToAction("Challenge", new { selectedChallengeId = viewModel.SelectedChallengeId });

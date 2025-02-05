@@ -126,5 +126,25 @@ namespace EvoCharacterManager.Controllers
         }
 
         private readonly ICharacterService myService;
+
+        
+        [HttpPost]
+        public async Task<IActionResult> SaveCharacterChange(CharacterPageViewModel viewModel)
+        {
+            var character = await myService.GetCharacterById(viewModel.SelectedCharacterId);
+            if (character != null && viewModel.SelectedCharacter != null)
+            {
+                character.Name = viewModel.SelectedCharacter.Name;
+                character.Bravery = viewModel.SelectedCharacter.Bravery;
+                character.Trust = viewModel.SelectedCharacter.Trust;
+                character.Presence = viewModel.SelectedCharacter.Presence;
+                character.Growth = viewModel.SelectedCharacter.Growth;
+                character.Care = viewModel.SelectedCharacter.Care;
+
+                await myService.SaveChanges();
+            }
+
+            return RedirectToAction("Character", new { selectedCharacterId = viewModel.SelectedCharacterId });
+        }
     }
 }
