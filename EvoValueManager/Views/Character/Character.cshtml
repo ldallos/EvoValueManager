@@ -13,15 +13,10 @@
     {
         @Html.DropDownListFor(m => m.SelectedCharacterId, (SelectList)Model.SelectableCharacters, "Válassz egy csapattagot",
             new { @class = "form-control evo-margin evo-dropdown evo-dropdown-select", onchange = "this.form.submit();" })
-        @Html.HiddenFor(m => m.AddCharacter)
     }
+    
+    <button type="button" onclick="toggleAddCharacter()" class="evo-margin btn btn-primary" id="toggleAddCharacter">+</button>
 
-    @using (Html.BeginForm("AddCharacter", "Character", FormMethod.Post))
-    {
-        @Html.HiddenFor(m => m.SelectedCharacterId)
-        @Html.HiddenFor(m => m.AddCharacter)
-        <button type="submit" class="evo-margin btn btn-primary">@(Model.AddCharacter ? "-" : "+")</button>
-    }
 </div>
 
 @if (Model.SelectedCharacter != null)
@@ -50,8 +45,8 @@
     </div>
 }
 
-@if (Model.AddCharacter)
-{
+
+<div id="addCharacter" style="display:none;">
     @using (Html.BeginForm("SaveNewCharacter", "Character", FormMethod.Post))
     {
         @if (TempData["ErrorMessage"] != null)
@@ -138,7 +133,7 @@
             <button type="submit" class="btn btn-primary">Mentés</button>
         </div>
     }
-}
+</div>
 
 @if (Model.SelectedCharacter != null)
 {

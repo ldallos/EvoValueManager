@@ -14,12 +14,8 @@
         @Html.DropDownListFor(m => m.SelectedChallengeId, (SelectList)Model.SelectableChallenges, "Válassz egy kihívást",
             new { @class = "form-control evo-margin evo-dropdown evo-dropdown-select", onchange = "this.form.submit();" })
     }
-    @using (Html.BeginForm("AddChallenge", "Challenge", FormMethod.Post))
-    {
-        @Html.HiddenFor(m => m.SelectedChallengeId)
-        @Html.HiddenFor(m => m.AddChallenge)
-        <button type="submit" class="evo-margin btn btn-primary">@(Model.AddChallenge ? "-" : "+")</button>
-    }
+    <button type="button" onclick="toggleAddChallenge()" class="evo-margin btn btn-primary" id="toggleAddChallenge">+</button>
+   
 </div>
 
 @if (Model.SelectedChallenge != null)
@@ -215,8 +211,7 @@
     </div>
 }
 
-@if (Model.AddChallenge)
-{
+<div id="addChallenge" style="display:none;">
     @using (Html.BeginForm("SaveNewChallenge", "Challenge", FormMethod.Post))
     {
         <div class="evo-details-margin">
@@ -354,4 +349,4 @@
             <button type="submit" class="btn btn-primary">Mentés</button>
         </div>
     }
-}
+</div>
