@@ -19,18 +19,25 @@
             </button>
             <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                 <ul class="navbar-nav flex-grow-1">
-                    <li class="nav-item">
-                        <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Főoldal</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" asp-area="" asp-controller="Character" asp-action="Character">Csapattagok</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" asp-area="" asp-controller="Challenge" asp-action="Challenge">Kihívások</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" asp-area="" asp-controller="Management" asp-action="Management">Vezetés/Fejlesztés</a>
-                    </li>
+                    @{
+                        var navItems = new[]
+                        {
+                            new { Controller = "Home", Action = "Index", Text = "Főoldal" },
+                            new { Controller = "Character", Action = "Character", Text = "Csapattagok" },
+                            new { Controller = "Challenge", Action = "Challenge", Text = "Kihívások" },
+                            new { Controller = "Management", Action = "Management", Text = "Vezetés/Fejlesztés" }
+                        };
+
+                        foreach (var item in navItems)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white @(ViewContext.RouteData.Values["Controller"].ToString() == item.Controller ? "active" : "")"
+                                   asp-area="" asp-controller="@item.Controller" asp-action="@item.Action">
+                                    @item.Text
+                                </a>
+                            </li>
+                        }
+                    }
                 </ul>
             </div>
         </div>
