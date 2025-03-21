@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EvoValueManager\EvoValueManager.csproj" />
+    <ProjectReference Include="..\EvoValueManager.Server\EvoValueManager.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>
