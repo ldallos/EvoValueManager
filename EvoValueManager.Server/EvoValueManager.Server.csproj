@@ -34,4 +34,17 @@
       </Compile>
     </ItemGroup>
 
+    <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
+        <Exec Command="node --version" ContinueOnError="true">
+            <Output TaskParameter="ExitCode" PropertyName="ErrorCode"/>
+        </Exec>
+        <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. Install from https://nodejs.org/ and restart your terminal."/>
+        <Message Importance="high" Text="Restoring dependencies using 'npm'..."/>
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm install"/>
+    </Target>
+    
+    <Target Name="EnsureDistExists" BeforeTargets="Build">
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" Condition="!Exists('$(SpaRoot)dist')" />
+    </Target>
+
 </Project>
