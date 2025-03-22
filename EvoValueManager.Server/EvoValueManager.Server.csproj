@@ -42,8 +42,9 @@
         <Message Importance="high" Text="Restoring dependencies using 'npm'..."/>
         <Exec WorkingDirectory="$(SpaRoot)" Command="npm install"/>
     </Target>
-    
+
     <Target Name="EnsureDistExists" BeforeTargets="Build">
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" Condition="!Exists('$(SpaRoot)node_modules')" />
         <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" Condition="!Exists('$(SpaRoot)dist')" />
     </Target>
 
