@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿import { React, useState, useEffect } from 'react';
 
 
 interface Trait {
@@ -31,41 +31,42 @@ const Character = () => {
     const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
     const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
 
-   // useEffect(() => {
-        const fetchCharacters = async () => {
-            try {
-                const response = await fetch('/api/characters');
-                if (!response.ok) throw new Error('Failed to fetch characters');
-                const data = await response.json();
-                setCharacters(data);
-            } catch (error) {
-                console.error('Failed to fetch characters:', error);
-            }
-        };
-        fetchCharacters();
-  //  }, []);
+    useEffect(() => {
+        fetchCharacters(); // az oldal betöltödésekor 1x lefut az adatok betöltése
+    }, []);
+
+    const fetchCharacters = async () => {
+        try {
+            const response = await fetch('/api/characters');
+            if (!response.ok) throw new Error('Failed to fetch characters');
+            const data = await response.json();
+            setCharacters(data);
+        } catch (error) {
+            console.error('Failed to fetch characters:', error);
+        }
+    };
+    
+
+    const handleDropdownOpen = () => { // csak akkor tölti be az adatokat mikor megyitjuk a menüt
+        fetchCharacters(); 
+    };
+
+    
 
     const handleCharacterSelection = (event: React.FormEvent) => {
-        console.log("belep");
         event.preventDefault();
-        console.log("belep2");
-        const selected = characters.find((char) => char.id === selectedCharacterId) || null;
-        console.log("belep3");
-      //  useEffect(() => {
-            console.log("belep4");
-            const fetchCharactersByID = async () => {
+        const fetchCharactersByID = async (id: number) => {
                 try {
-                    console.error("asdasd");
-                    const response = await fetch(`/api/characters/asd?id=1`);
+                    console.log("Lekérdezés karakter ID alapján:", id);
+                    const response = await fetch(`/api/characters/asd?id=${id}`);
                     if (!response.ok) throw new Error('Failed to fetch characters');
                     const data = await response.json();
                     setSelectedCharacter(data);
                 } catch (error) {
                     console.error('Failed to fetch characters:', error);
                 }
-            };
-            fetchCharactersByID();
-      //  }, []);
+        };
+       fetchCharactersByID(selectedCharacterId);
     };
 
     return (
@@ -76,7 +77,8 @@ const Character = () => {
                 <select
                     value={selectedCharacterId || ''}
                     onChange={(e) => setSelectedCharacterId(Number(e.target.value))}
-                    className="form-control evo-margin evo-dropdown evo-dropdown-select"
+                        className="form-control evo-margin evo-dropdown evo-dropdown-select"
+                        onFocus={handleDropdownOpen}
                 >
                     <option value="" disabled>Válassz egy csapattagot</option>
                     {characters.length > 0 ? (
