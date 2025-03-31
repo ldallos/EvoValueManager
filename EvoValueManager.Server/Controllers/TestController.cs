@@ -4,8 +4,8 @@ namespace EvoCharacterManager.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TestController : ControllerBase
+public class ValakiController : ControllerBase
 {
     [HttpGet("hello")]
-    public IActionResult Hello() => Ok("Hello from TestController!");
+    public IActionResult Hello() => Ok("Hello from ValakiController!");
 }

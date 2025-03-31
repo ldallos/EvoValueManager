@@ -4,6 +4,7 @@ using EvoCharacterManager.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
+
 namespace EvoCharacterManager.Controllers
 {
     public class CharacterController : Controller
@@ -13,6 +14,7 @@ namespace EvoCharacterManager.Controllers
             myService = service;
         }
 
+        [HttpPost]
         public async Task<IActionResult> Character(int? selectedCharacterId, bool? addCharacter)
         {
             var characters = await myService.GetAllCharacters();

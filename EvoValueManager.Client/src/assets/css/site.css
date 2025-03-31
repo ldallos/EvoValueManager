@@ -1,0 +1,277 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300&display=swap');
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+    display: block;
+    font-family: 'Poppins', sans-serif;
+    color: #575757;
+}
+
+h2 {
+    font-weight: bold;
+}
+
+td {
+    text-align: center;
+    white-space: nowrap;
+}
+
+
+.evo-table-values{
+    width: 150px;
+    font-size: 1.2rem;
+}
+
+.evo-margin {
+    margin: 10px;
+}
+
+.evo-details-margin {
+    margin-top: 30px;
+    margin-left: 10px;
+}
+
+.evo-flex {
+    display: flex;
+    align-items: flex-end;
+}
+
+.evo-dropdown {
+    width: 15em;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-shadow: 3px 3px 2px 0 #E2E2E2;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3e%3cpath fill='rgba(0,0,0,0.54)' d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 1.5em 1.5em;
+    padding-right: 30px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.evo-dropdown:hover {
+    border-color: #619621;
+}
+
+.evo-dropdown-select option:first-child {
+    color: grey;
+}
+
+.evo-character-label {
+    text-align-last: end;
+    width: 150px;
+}
+
+.evo-challenge-label {
+    text-align-last: end;
+    width: 350px;
+}
+
+.evo-traits-image-small img {
+    width: 72px;
+    height: 72px;
+}
+
+.evo-index-image img {
+    width: 180px;
+    height: 250px;
+    margin: 10px;
+}
+
+.bg-evosoft {
+    background-color: rgb(97, 150, 33);
+}
+
+.management-details {
+    display: flex;
+    align-items: center;
+    position: relative;
+    max-width: 100%;
+}
+
+.svg_icon {
+    position: absolute;
+    left: 10px;
+    fill: #619621;
+    width: 18px;
+    height: 18px;
+}
+
+.btn {
+    box-shadow: 3px 3px 2px 0 #E2E2E2;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: .3s ease;
+}
+
+textarea[name="Details"] {
+    font-size: 18px;
+    padding: 10px 10px;
+    width: 100%;
+    padding-left: 35px;
+    outline: none;
+    background: #FFFFFF;
+    color: #575757;
+    border: 1px solid #619621;
+    box-shadow: 3px 3px 2px 0 #E2E2E2;
+    border-radius: 10px;
+    transition: .3s ease;
+}
+
+textarea[name="Details"]:focus {
+    outline: none !important;
+    background: #F2F2F2;
+    border: 1px solid #619621;
+    border-radius: 10px;
+}
+
+textarea[name="Details"]::placeholder {
+    color: #DDDDDD;
+}
+
+.form-control:focus {
+    border-color: #cccccc;
+    -webkit-box-shadow: none;
+    box-shadow: 3px 3px 2px 0 #E2E2E2;
+}
+
+.navbar {
+    background: linear-gradient(to bottom, rgb(97, 150, 33) 40%, transparent);
+    height: 70px;
+    border: none !important;
+    padding-left: 60px;
+    padding-bottom: 1rem;
+}
+
+.navbar a {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+    position: relative;
+    padding: 5px 0;
+}
+
+.navbar a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 1px;
+    background-color: white;
+    transform: scaleX(0);
+    transform-origin: bottom right;
+    transition: transform 0.3s ease;
+}
+
+.navbar a:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
+.navbar .navbar-nav .nav-item .nav-link.active::after {
+    transform: scaleX(1);
+}
+
+.values-container {
+    display: flex;
+    width: 90%;
+    margin: 50px auto;
+    align-items: center;
+    padding-right: 30px;
+    padding-left: 30px;
+    background: #F2F2F2;
+    border-radius: 20px;
+    height: 350px;
+}
+
+.text-area {
+    flex: 70%;
+    padding-right: 70px;
+    font-size: 28px;
+    padding-left: 70px;
+}
+
+.image-area {
+    flex: 30%;
+    position: relative;
+}
+
+.image-area img {
+    max-width: clamp(30%, 90%, 100%);
+    height: auto;
+    position: relative;
+    left: -20px;
+    top: -10px;
+}
+
+.mirror {
+    flex-direction: row-reverse;
+}
+
+.mirror .image-area {
+    left: 50px;
+}
+
+.values-intro{
+    font-size: larger;
+    margin-bottom: 100px;
+}
+
+@media (max-width: 768px) {
+    .values-container {
+        flex-direction: column;
+        height: auto;
+        padding: 20px;
+        width: 90%;
+        margin: 20px auto;
+    }
+
+    .text-area {
+        flex: 100%;
+        font-size: 18px;
+        padding: 0 0 20px 0;
+        text-align: center;
+    }
+
+    .mirror .text-area {
+        padding: 0 0 20px 0;
+    }
+
+    .image-area {
+        flex: 100%;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .image-area img {
+        max-width: 80%;
+        height: auto;
+        left: 0;
+        top: 0;
+    }
+}
