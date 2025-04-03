@@ -1,11 +1,11 @@
-﻿import { useEffect, useState } from "react";
+﻿import {useEffect, useState} from "react";
 
 const TestComponent = () => {
     const [message, setMessage] = useState("");
 
     useEffect(() => {
         fetch("/api/test/hello")
-            .then((response) => response.text()) // Since it returns plain text
+            .then((response) => response.text())
             .then((data) => setMessage(data))
             .catch((error) => console.error("Error fetching data:", error));
     }, []);

@@ -2,149 +2,151 @@ using EvoCharacterManager.Models.Entities;
 using EvoCharacterManager.Models.ViewModels;
 using EvoCharacterManager.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EvoCharacterManager.Controllers
 {
-    public class CharacterController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class CharacterController : ControllerBase
     {
+        private readonly ICharacterService _characterService;
+
         public CharacterController(ICharacterService service)
         {
-            myService = service;
+            _characterService = service;
         }
 
-        public async Task<IActionResult> Character(int? selectedCharacterId, bool? addCharacter)
+        // GET: api/Character
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<CharacterViewModel>>> GetCharacters()
         {
-            var characters = await myService.GetAllCharacters();
-
-            var characterViewModels = characters.Select(c => new CharacterViewModel
+            var characters = await _characterService.GetAllCharacters();
+            
+            var viewModels = characters.Select(c => new CharacterViewModel
             {
-                Name = c.Name,
                 Id = c.ID,
+                Name = c.Name,
+                Bravery = c.Bravery,
+                Trust = c.Trust,
+                Presence = c.Presence,
+                Growth = c.Growth,
+                Care = c.Care
             }).ToList();
 
-            CharacterViewModel? selectedCharacter = null;
-            if (selectedCharacterId.HasValue)
-            {
-                var character = await myService.GetCharacterById(selectedCharacterId.Value);
-                if (character != null)
-                {
-                    selectedCharacter = new CharacterViewModel
-                    {
-                        Id = character.ID,
-                        Name = character.Name,
-                        Bravery = character.Bravery,
-                        Trust = character.Trust,
-                        Presence = character.Presence,
-                        Growth = character.Growth,
-                        Care = character.Care
-                    };
-                }
-            }
+            return Ok(viewModels);
+        }
 
-            var viewModel = new CharacterPageViewModel
+        // GET: api/Character/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<CharacterViewModel>> GetCharacter(int id)
+        {
+            var character = await _characterService.GetCharacterById(id);
+
+            if (character == null)
             {
-                SelectedCharacterId = selectedCharacterId ?? 0,
-                SelectedCharacter = selectedCharacter,
-                SelectableCharacters = new SelectList(characterViewModels, "Id", "Name"),
-                AddCharacter = addCharacter ?? false
+                return NotFound();
+            }
+            
+            var viewModel = new CharacterViewModel
+            {
+                Id = character.ID,
+                Name = character.Name,
+                Bravery = character.Bravery,
+                Trust = character.Trust,
+                Presence = character.Presence,
+                Growth = character.Growth,
+                Care = character.Care
             };
 
-            return View(viewModel);
+            return Ok(viewModel);
         }
 
+        // POST: api/Character
         [HttpPost]
-        public IActionResult CharacterSelection(CharacterPageViewModel viewModel)
+        public async Task<ActionResult<CharacterViewModel>> PostCharacter([FromBody] CharacterViewModel characterViewModel)
         {
-            return RedirectToAction(
-                "Character",
-                new
-                {
-                    selectedCharacterId = viewModel.SelectedCharacterId,
-                    addCharacter = viewModel.AddCharacter
-                });
-        }
-
-        [HttpPost]
-        public IActionResult AddCharacter(CharacterPageViewModel viewModel)
-        {
-            return RedirectToAction(
-                "Character",
-                new
-                {
-                    selectedCharacterId = viewModel.SelectedCharacterId,
-                    addCharacter = !viewModel.AddCharacter
-                });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> SaveNewCharacter(CharacterPageViewModel viewModel)
-        {
-            if (string.IsNullOrEmpty(viewModel.NewCharacter?.Name) || viewModel.NewCharacter.Name.Length < 3)
+            if (string.IsNullOrEmpty(characterViewModel.Name) || characterViewModel.Name.Length < 3)
             {
-                TempData["ErrorMessage"] = "A karakter nevének legalább 3 karakter hosszúnak kell lennie!";
-                return RedirectToAction("Character", new
-                {
-                    selectedCharacterId = viewModel.SelectedCharacterId,
-                    addCharacter = true
-                });
+                return BadRequest("Character name must be at least 3 characters long.");
             }
 
             var validations = new List<(string PropertyName, int Value, string ErrorMessage)>
             {
-                ("Bravery", viewModel.NewCharacter.Bravery, "A karakter merészségének 1 és 100 közötti értéket lehet megadni"),
-                ("Trust", viewModel.NewCharacter.Trust, "A karakter megbízhatóságának 1 és 100 közötti értéket lehet megadni"),
-                ("Presence", viewModel.NewCharacter.Presence, "A karakter jelenlétének 1 és 100 közötti értéket lehet megadni"),
-                ("Growth", viewModel.NewCharacter.Growth, "A karakter fejlődésének 1 és 100 közötti értéket lehet megadni"),
-                ("Care", viewModel.NewCharacter.Care, "A karakter gondoskodásának 1 és 100 közötti értéket lehet megadni"),
+                ("Bravery", characterViewModel.Bravery, "Bravery must be between 1 and 100."),
+                ("Trust", characterViewModel.Trust, "Trust must be between 1 and 100."),
+                ("Presence", characterViewModel.Presence, "Presence must be between 1 and 100."),
+                ("Growth", characterViewModel.Growth, "Growth must be between 1 and 100."),
+                ("Care", characterViewModel.Care, "Care must be between 1 and 100."),
             };
 
             foreach (var validation in validations)
             {
                 if (validation.Value < 1 || validation.Value > 100)
                 {
-                    TempData["ErrorMessage"] = validation.ErrorMessage;
-                    return RedirectToAction("Character", new
-                    {
-                        selectedCharacterId = viewModel.SelectedCharacterId,
-                        addCharacter = true
-                    });
+                    return BadRequest(validation.ErrorMessage);
                 }
             }
 
-            Character character = new Character
+            var character = new Character
             {
-                Name = viewModel.NewCharacter.Name,
-                Bravery = viewModel.NewCharacter.Bravery,
-                Trust = viewModel.NewCharacter.Trust,
-                Presence = viewModel.NewCharacter.Presence,
-                Growth = viewModel.NewCharacter.Growth,
-                Care = viewModel.NewCharacter.Care
+                Name = characterViewModel.Name,
+                Bravery = characterViewModel.Bravery,
+                Trust = characterViewModel.Trust,
+                Presence = characterViewModel.Presence,
+                Growth = characterViewModel.Growth,
+                Care = characterViewModel.Care
             };
-            await myService.SaveNewCharacter(character);
-            return RedirectToAction("Character", new { selectedCharacterId = viewModel.SelectedCharacterId });
+
+            await _characterService.SaveNewCharacter(character);
+            
+            var createdViewModel = new CharacterViewModel
+            {
+                 Id = character.ID,
+                 Name = character.Name,
+                 Bravery = character.Bravery,
+                 Trust = character.Trust,
+                 Presence = character.Presence,
+                 Growth = character.Growth,
+                 Care = character.Care
+            };
+            
+            return CreatedAtAction(nameof(GetCharacter), new { id = character.ID }, createdViewModel);
         }
 
-        private readonly ICharacterService myService;
-
-        
-        [HttpPost]
-        public async Task<IActionResult> SaveCharacterChange(CharacterPageViewModel viewModel)
+        // PUT: api/Character/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutCharacter(int id, [FromBody] CharacterViewModel characterViewModel)
         {
-            var character = await myService.GetCharacterById(viewModel.SelectedCharacterId);
-            if (character != null && viewModel.SelectedCharacter != null)
+            if (id != characterViewModel.Id)
             {
-                character.Name = viewModel.SelectedCharacter.Name;
-                character.Bravery = viewModel.SelectedCharacter.Bravery;
-                character.Trust = viewModel.SelectedCharacter.Trust;
-                character.Presence = viewModel.SelectedCharacter.Presence;
-                character.Growth = viewModel.SelectedCharacter.Growth;
-                character.Care = viewModel.SelectedCharacter.Care;
-
-                await myService.SaveChanges();
+                return BadRequest("ID mismatch in route and body.");
             }
 
-            return RedirectToAction("Character", new { selectedCharacterId = viewModel.SelectedCharacterId });
+            var characterToUpdate = await _characterService.GetCharacterById(id);
+
+            if (characterToUpdate == null)
+            {
+                return NotFound();
+            }
+
+            if (string.IsNullOrEmpty(characterViewModel.Name) || characterViewModel.Name.Length < 3) { return BadRequest("Name too short."); }
+            if (characterViewModel.Bravery < 1 || characterViewModel.Bravery > 100) { return BadRequest("Invalid Bravery."); }
+            if (characterViewModel.Trust < 1 || characterViewModel.Trust > 100) { return BadRequest("Invalid Trust."); }
+            if (characterViewModel.Presence < 1 || characterViewModel.Presence > 100) { return BadRequest("Invalid Presence."); }
+            if (characterViewModel.Growth < 1 || characterViewModel.Growth > 100) { return BadRequest("Invalid Growth."); }
+            if (characterViewModel.Care < 1 || characterViewModel.Care > 100) { return BadRequest("Invalid Care."); }
+
+             
+            characterToUpdate.Name = characterViewModel.Name;
+            characterToUpdate.Bravery = characterViewModel.Bravery;
+            characterToUpdate.Trust = characterViewModel.Trust;
+            characterToUpdate.Presence = characterViewModel.Presence;
+            characterToUpdate.Growth = characterViewModel.Growth;
+            characterToUpdate.Care = characterViewModel.Care;
+
+            await _characterService.SaveChanges();
+
+            return NoContent();
         }
     }
 }

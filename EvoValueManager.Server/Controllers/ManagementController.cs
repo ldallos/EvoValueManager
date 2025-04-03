@@ -1,322 +1,337 @@
 using EvoCharacterManager.Models.Entities;
-using EvoCharacterManager.Models.ViewModels;
+using EvoCharacterManager.Models.ViewModels; // Reusing where appropriate
 using EvoCharacterManager.Services;
-using EvoValueManager.Models.Shared;
+using EvoValueManager.Models.Shared; // For Resources if needed, or move helper
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore; // For DbUpdateConcurrencyException
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace EvoCharacterManager.Controllers
 {
-    public class ManagementController : Controller
+    // --- DTOs specific to Management API ---
+
+    // Payload for assigning a challenge
+    public class AssignChallengePayload
     {
+        public int CharacterId { get; set; }
+        public int ChallengeId { get; set; }
+        public int StateId { get; set; } // Use numeric ID (1-5) from frontend
+        public string? Details { get; set; }
+    }
+
+    // Payload for updating an assignment
+    public class UpdateManagementPayload
+    {
+        public int StateId { get; set; } // Use numeric ID (1-5) from frontend
+        public string? Details { get; set; }
+    }
+
+    // DTO for returning assignment details
+    public class ManagementDetailsViewModel
+    {
+        public string State { get; set; } = string.Empty; // Store state as text
+        public string? Details { get; set; }
+        public bool IsClosed { get; set; }
+    }
+
+    // --- API Controller ---
+
+    [ApiController]
+    [Route("api/[controller]")] // Sets the base route to /api/Management
+    public class ManagementController : ControllerBase
+    {
+        private readonly IManagementService _managementService;
+        private readonly ICharacterService _characterService;
+        private readonly IChallengeService _challengeService;
+
         public ManagementController(
             IManagementService managementService,
             ICharacterService characterService,
             IChallengeService challengeService)
         {
-            myManagementService = managementService;
-            myCharacterService = characterService;
-            myChallengeService = challengeService;
+            _managementService = managementService;
+            _characterService = characterService;
+            _challengeService = challengeService;
         }
 
-        public async Task<IActionResult> Management(
-            int? selectedAssignedId, 
-            int? selectedCharacterId,
-            int? selectedChallengeId)
+        // Helper to convert state ID (1-5) to the text stored in DB
+        // You might move this to a shared utility class or the service layer
+        private string GetStateTextFromId(int stateId)
         {
-            var viewModel = await InitializeViewModel(selectedAssignedId, selectedCharacterId);
+            // This assumes Resources class is accessible or you replicate the mapping
+            // return ManagementPageViewModel.GetStateText(stateId); // If using the old VM helper
 
-            if (selectedCharacterId.HasValue)
+            // Or direct mapping:
+            return stateId switch
             {
-                await PopulateCharacterRelatedData(viewModel, selectedCharacterId.Value, selectedChallengeId);
-            }
-
-            return View(viewModel);
-        }
-
-        private async Task<ManagementPageViewModel> InitializeViewModel(int? selectedAssignedId, int? selectedCharacterId)
-        {
-            var characters = await myCharacterService.GetAllCharacters();
-            var characterViewModels = await GetFilteredCharacterViewModels(characters, selectedAssignedId);
-
-            return new ManagementPageViewModel
-            {
-                SelectedAssignedId = selectedAssignedId ?? 1,
-                SelectedCharacterId = selectedCharacterId ?? 0,
-                SelectableCharacters = new SelectList(characterViewModels, "Id", "Name")
+                1 => Resources.ChallengeState_New, // "Új"
+                2 => Resources.ChallengeState_InProgress, // "Folyamatban"
+                3 => Resources.ChallengeState_Completed, // "Befejezett"
+                4 => Resources.ChallengeState_Suspended, // "Felfüggesztett"
+                5 => Resources.ChallengeState_Cancelled, // "Megszakított"
+                _ => Resources.ChallengeState_New // Default to "Új"
             };
         }
 
-        private async Task<List<CharacterViewModel>> GetFilteredCharacterViewModels(
-            IEnumerable<Character> characters,
-            int? selectedAssignedId)
+        // GET: api/Management/available/{characterId}
+        [HttpGet("available/{characterId}")]
+        public async Task<ActionResult<IEnumerable<ChallengeViewModel>>> GetAvailableChallenges(int characterId)
         {
-            var characterList = new List<CharacterViewModel>();
-            var allChallenges = await myChallengeService.GetAllChallenges();
+            var character = await _characterService.GetCharacterById(characterId);
+            if (character == null) return NotFound("Character not found.");
 
-            foreach (var character in characters)
-            {
-                var assignedChallenges = await myManagementService.GetAssignedChallenges(character.ID);
-                var closedChallenges = await myManagementService.GetClosedChallenges(character.ID);
-                
-                bool shouldIncludeCharacter = selectedAssignedId is null or 1
-                    ? allChallenges.Any(c =>
-                        !assignedChallenges.Contains(c) &&
-                        !closedChallenges.Contains(c))
-                    : selectedAssignedId != 2 || assignedChallenges.Count != 0;
+            var allChallenges = await _challengeService.GetAllChallenges();
+            var assignedChallenges = await _managementService.GetAssignedChallenges(characterId); // Service returns List<Challenge>
+            var closedChallenges = await _managementService.GetClosedChallenges(characterId); // Service returns List<Challenge>
 
-                if (shouldIncludeCharacter)
-                {
-                    characterList.Add(CreateCharacterViewModel(character));
-                }
-            }
+            var assignedOrClosedIds = assignedChallenges.Select(c => c.ID)
+                                       .Union(closedChallenges.Select(c => c.ID))
+                                       .ToHashSet();
 
-            return characterList;
+            var available = allChallenges
+                .Where(c => !assignedOrClosedIds.Contains(c.ID))
+                // *** Ensure FULL mapping here ***
+                .Select(c => new ChallengeViewModel {
+                    Id = c.ID,
+                    Title = c.Title,
+                    RequiredBravery = c.RequiredBravery, // Add this
+                    RequiredTrust = c.RequiredTrust,     // Add this
+                    RequiredPresence = c.RequiredPresence, // Add this
+                    RequiredGrowth = c.RequiredGrowth,   // Add this
+                    RequiredCare = c.RequiredCare,     // Add this
+                    GainableBravery = c.GainableBravery, // Add this
+                    GainableTrust = c.GainableTrust,     // Add this
+                    GainablePresence = c.GainablePresence, // Add this
+                    GainableGrowth = c.GainableGrowth,   // Add this
+                    GainableCare = c.GainableCare      // Add this
+                })
+                .ToList();  
+
+            return Ok(available);
         }
 
-        private static CharacterViewModel CreateCharacterViewModel(Character character) =>
-            new()
+        // GET: api/Management/assigned/{characterId}
+        [HttpGet("assigned/{characterId}")]
+        public async Task<ActionResult<IEnumerable<ChallengeViewModel>>> GetAssignedChallenges(int characterId)
+        {
+             var character = await _characterService.GetCharacterById(characterId);
+             if (character == null) return NotFound("Character not found.");
+
+            var assigned = await _managementService.GetAssignedChallenges(characterId); // Service returns List<Challenge> for *non-closed*
+
+            var viewModels = assigned.Select(c => new ChallengeViewModel {
+                Id = c.ID,
+                Title = c.Title,
+                RequiredBravery = c.RequiredBravery, // Add this
+                RequiredTrust = c.RequiredTrust,     // Add this
+                RequiredPresence = c.RequiredPresence, // Add this
+                RequiredGrowth = c.RequiredGrowth,   // Add this
+                RequiredCare = c.RequiredCare,     // Add this
+                GainableBravery = c.GainableBravery, // Add this
+                GainableTrust = c.GainableTrust,     // Add this
+                GainablePresence = c.GainablePresence, // Add this
+                GainableGrowth = c.GainableGrowth,   // Add this
+                GainableCare = c.GainableCare      // Add this
+            }).ToList();
+
+
+            return Ok(viewModels);
+        }
+
+        // GET: api/Management/{characterId}/{challengeId}
+        [HttpGet("{characterId}/{challengeId}")]
+        public async Task<ActionResult<ManagementDetailsViewModel>> GetAssignmentDetails(int characterId, int challengeId)
+        {
+            var management = await _managementService.GetManagement(characterId, challengeId);
+            if (management == null)
             {
-                Name = character.Name,
-                Id = character.ID,
-                Bravery = character.Bravery,
-                Trust = character.Trust,
-                Presence = character.Presence,
-                Growth = character.Growth,
-                Care = character.Care
+                // It might not exist if it's an 'available' challenge, which is not an error in that context
+                // But if the frontend calls this only for assigned, then NotFound is correct.
+                return NotFound("Assignment not found.");
+            }
+
+            var detailsViewModel = new ManagementDetailsViewModel
+            {
+                State = management.State, // State is already stored as text
+                Details = management.Details,
+                IsClosed = management.IsClosed
             };
 
-        private async Task PopulateCharacterRelatedData(ManagementPageViewModel viewModel, int selectedCharacterId,
-            int? selectedChallengeId)
-        {
-            await PopulateSelectableChallenges(viewModel, selectedCharacterId);
-            await PopulateSelectedCharacter(viewModel, selectedCharacterId);
-
-            if (selectedChallengeId.HasValue)
-            {
-                await PopulateSelectedChallenge(viewModel, selectedCharacterId, selectedChallengeId.Value);
-            }
+            return Ok(detailsViewModel);
         }
 
-        private async Task PopulateSelectableChallenges(ManagementPageViewModel viewModel, int selectedCharacterId)
-        {
-            var challenges =
-                await GetChallengesBasedOnAssignmentType(viewModel.SelectedAssignedId, selectedCharacterId);
-            var challengeViewModels = challenges.Select(CreateChallengeViewModel).ToList();
-            viewModel.SelectableChallenges = new SelectList(challengeViewModels, "Id", "Title");
-        }
-
-        private async Task<List<Challenge>> GetChallengesBasedOnAssignmentType(int selectedAssignedId, int characterId)
-        {
-            if (selectedAssignedId == 1)
-            {
-                var allChallenges = await myChallengeService.GetAllChallenges();
-                var assignedChallenges = await myManagementService.GetAssignedChallenges(characterId);
-                var closedChallenges = await myManagementService.GetClosedChallenges(characterId);
-
-                return allChallenges
-                    .Where(c => !assignedChallenges.Contains(c) && !closedChallenges.Contains(c))
-                    .ToList();
-            }
-    
-            return await myManagementService.GetAssignedChallenges(characterId);
-        }
-
-        private static ChallengeViewModel CreateChallengeViewModel(Challenge challenge) =>
-            new()
-            {
-                Id = challenge.ID,
-                Title = challenge.Title,
-                RequiredBravery = challenge.RequiredBravery,
-                RequiredTrust = challenge.RequiredTrust,
-                RequiredPresence = challenge.RequiredPresence,
-                RequiredCare = challenge.RequiredCare,
-                RequiredGrowth = challenge.RequiredGrowth,
-                GainableBravery = challenge.GainableBravery,
-                GainableTrust = challenge.GainableTrust,
-                GainablePresence = challenge.GainablePresence,
-                GainableCare = challenge.GainableCare,
-                GainableGrowth = challenge.GainableGrowth
-            };
-
-        private async Task PopulateSelectedCharacter(ManagementPageViewModel viewModel, int selectedCharacterId)
-        {
-            var character = await myCharacterService.GetCharacterById(selectedCharacterId);
-            if (character != null)
-            {
-                viewModel.SelectedCharacter = CreateCharacterViewModel(character);
-            }
-        }
-
-        private async Task PopulateSelectedChallenge(ManagementPageViewModel viewModel, int selectedCharacterId,
-            int selectedChallengeId)
-        {
-            var challenge = await myChallengeService.GetChallengeById(selectedChallengeId);
-            if (challenge != null)
-            {
-                viewModel.SelectedChallenge = CreateChallengeViewModel(challenge);
-                viewModel.Details =
-                    await myManagementService.GetManagementDetails(selectedCharacterId, selectedChallengeId);
-                await PopulateChallengeState(viewModel, selectedCharacterId, selectedChallengeId);
-            }
-        }
-
-        private async Task PopulateChallengeState(ManagementPageViewModel viewModel, int selectedCharacterId,
-            int selectedChallengeId)
-        {
-            var currentState = await myManagementService.GetState(selectedCharacterId, selectedChallengeId);
-            if (currentState != null)
-            {
-                viewModel.SelectedStateId = MapStateToId(currentState);
-            }
-        }
-
-        private static int MapStateToId(string state)
-        {
-            if (state == Resources.ChallengeState_New)
-                return 1;
-            if (state == Resources.ChallengeState_InProgress)
-                return 2;
-            if (state == Resources.ChallengeState_Completed)
-                return 3;
-            if (state == Resources.ChallengeState_Suspended)
-                return 4;
-            if (state == Resources.ChallengeState_Cancelled)
-                return 5;
-            return 1;
-        }
-        
-        private bool IsStatSufficient(int characterStat, int? requiredStat)
-        {
-            return requiredStat == null || characterStat >= requiredStat;
-        }
-
+        // POST: api/Management
         [HttpPost]
-        public IActionResult Assign(ManagementPageViewModel viewModel)
+        public async Task<IActionResult> AssignChallengeToCharacter([FromBody] AssignChallengePayload payload)
         {
-            return RedirectToAction("Management", new { selectedAssignedId = viewModel.SelectedAssignedId });
-        }
-
-        [HttpPost]
-        public IActionResult CharacterSelection(ManagementPageViewModel viewModel)
-        {
-            if (viewModel.SelectedCharacterId > 0)
-            {
-                return RedirectToAction(
-                    "Management",
-                    new
-                    {
-                        selectedAssignedId = viewModel.SelectedAssignedId,
-                        selectedCharacterId = viewModel.SelectedCharacterId
-                    });
-            }
-
-            return RedirectToAction("Management");
-        }
-
-        [HttpPost]
-        public IActionResult ChallengeSelection(ManagementPageViewModel viewModel)
-        {
-            if (viewModel.SelectedChallengeId > 0)
-            {
-                return RedirectToAction(
-                    "Management",
-                    new
-                    {
-                        selectedAssignedId = viewModel.SelectedAssignedId,
-                        selectedCharacterId = viewModel.SelectedCharacterId,
-                        selectedChallengeId = viewModel.SelectedChallengeId
-                    });
-            }
-
-            return RedirectToAction("Management", new { selectedCharacterId = viewModel.SelectedCharacterId });
-        }
-
-
-        [HttpPost]
-        public async Task<IActionResult> UpdateChallengeDetails(ManagementPageViewModel viewModel)
-        {
-            await myManagementService.UpdateManagementDetails(viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, viewModel.Details);
-    
-            if (viewModel.SelectedStateId != 0)
-            {
-                await myManagementService.UpdateState(viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, ManagementPageViewModel.GetStateText(viewModel.SelectedStateId));
-            }
-
-            TempData["UpdateSuccess"] = Resources.UpdateSuccess;
-
-            return RedirectToAction("Management", new
-            {
-                selectedAssignedId = viewModel.SelectedAssignedId,
-                selectedCharacterId = viewModel.SelectedCharacterId,
-                selectedChallengeId = viewModel.SelectedChallengeId,
-                selectedStateId = viewModel.SelectedStateId
-            });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> AssignChallenge(ManagementPageViewModel viewModel)
-        {
-            var character = await myCharacterService.GetCharacterById(viewModel.SelectedCharacterId);
-            var challenge = await myChallengeService.GetChallengeById(viewModel.SelectedChallengeId);
+            var character = await _characterService.GetCharacterById(payload.CharacterId);
+            var challenge = await _challengeService.GetChallengeById(payload.ChallengeId);
 
             if (character == null || challenge == null)
             {
-                return RedirectToAction("Management");
+                return BadRequest("Invalid Character or Challenge ID.");
             }
 
+            // Check if already assigned (and not closed)
+            var existingManagement = await _managementService.GetManagement(payload.CharacterId, payload.ChallengeId);
+            if (existingManagement != null && !existingManagement.IsClosed)
+            {
+                return BadRequest("Challenge is already assigned to this character.");
+            }
+             if (existingManagement != null && existingManagement.IsClosed)
+            {
+                // Decide if re-assigning a closed challenge is allowed. If so, maybe update the existing record?
+                return BadRequest("This challenge was previously completed/closed by this character.");
+                 // Or: update existing record's IsClosed = false, State, Details
+            }
+
+
+            // --- Stat Check ---
             var insufficientStats = new List<string>();
-            if (!IsStatSufficient(character.Growth, challenge.RequiredGrowth)) insufficientStats.Add(Resources.Value_Growth.ToLower());
-            if (!IsStatSufficient(character.Care, challenge.RequiredCare)) insufficientStats.Add(Resources.Value_Care.ToLower());
-            if (!IsStatSufficient(character.Presence, challenge.RequiredPresence)) insufficientStats.Add(Resources.Value_Presence.ToLower());
-            if (!IsStatSufficient(character.Bravery, challenge.RequiredBravery)) insufficientStats.Add(Resources.Value_Bravery.ToLower());
-            if (!IsStatSufficient(character.Trust, challenge.RequiredTrust)) insufficientStats.Add(Resources.Value_Trust.ToLower());
-            
-            if (insufficientStats.Count != 0)
+            if (!IsStatSufficient(character.Growth, challenge.RequiredGrowth)) insufficientStats.Add(Resources.Value_Growth);
+            if (!IsStatSufficient(character.Care, challenge.RequiredCare)) insufficientStats.Add(Resources.Value_Care);
+            if (!IsStatSufficient(character.Presence, challenge.RequiredPresence)) insufficientStats.Add(Resources.Value_Presence);
+            if (!IsStatSufficient(character.Bravery, challenge.RequiredBravery)) insufficientStats.Add(Resources.Value_Bravery);
+            if (!IsStatSufficient(character.Trust, challenge.RequiredTrust)) insufficientStats.Add(Resources.Value_Trust);
+
+            if (insufficientStats.Count > 0)
             {
-                TempData["ErrorMessage"] = string.Format(Resources.InsufficientStats, string.Join(", ", insufficientStats.ToArray()).ToLower());
-                return RedirectToAction("Management", new
-                {
-                    selectedAssignedId = viewModel.SelectedAssignedId,
-                    selectedCharacterId = viewModel.SelectedCharacterId,
-                    selectedChallengeId = viewModel.SelectedChallengeId
-                });
+                return BadRequest($"Insufficient stats: {string.Join(", ", insufficientStats).ToLower()}.");
             }
+            // --- End Stat Check ---
 
-            await myManagementService.AssignChallenge(viewModel.SelectedCharacterId, viewModel.SelectedChallengeId, viewModel.SelectedStateId, viewModel.Details);
-            await myManagementService.SaveChanges();
+            try
+            {
+                string stateText = GetStateTextFromId(payload.StateId);
+                await _managementService.AssignChallenge(payload.CharacterId, payload.ChallengeId, payload.StateId, payload.Details); // Adjust service if needed
+                // The service method above needs to use the StateId/StateText correctly
+                // Let's assume the service's AssignChallenge takes the state ID and handles the text conversion, or takes the text directly
+                // await _managementService.AssignChallenge(payload.CharacterId, payload.ChallengeId, stateText, payload.Details); // Alternative if service expects text
 
-            return RedirectToAction("Management");
+                await _managementService.SaveChanges();
+
+                // What to return? Ok() is simple. CreatedAtAction requires a GET endpoint for the specific assignment.
+                 return Ok(new { message = "Challenge assigned successfully." });
+                // Or return CreatedAtAction(nameof(GetAssignmentDetails), new { characterId = payload.CharacterId, challengeId = payload.ChallengeId }, payload);
+            }
+            catch (Exception ex)
+            {
+                // Log exception ex
+                return StatusCode(500, "An error occurred while assigning the challenge.");
+            }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CloseChallenge(ManagementPageViewModel viewModel)
+
+        // PUT: api/Management/{characterId}/{challengeId}
+        [HttpPut("{characterId}/{challengeId}")]
+        public async Task<IActionResult> UpdateAssignment(int characterId, int challengeId, [FromBody] UpdateManagementPayload payload)
         {
-            Character? character = await myCharacterService.GetCharacterById(viewModel.SelectedCharacterId);
-            Challenge? challenge = await myChallengeService.GetChallengeById(viewModel.SelectedChallengeId);
-
-            if (character == null || challenge == null) return RedirectToAction("Management");
-
-            character.Bravery += challenge.GainableBravery ?? 0;
-            character.Trust += challenge.GainableTrust ?? 0;
-            character.Presence += challenge.GainablePresence ?? 0;
-            character.Growth += challenge.GainableGrowth ?? 0;
-            character.Care += challenge.GainableCare ?? 0;
-
-            var management = await myManagementService.GetManagement(viewModel.SelectedCharacterId, viewModel.SelectedChallengeId);
-            
-            if (management != null)
+            var management = await _managementService.GetManagement(characterId, challengeId);
+            if (management == null)
             {
-                management.IsClosed = true;
+                return NotFound("Assignment not found.");
             }
 
-            await myManagementService.SaveChanges();
+            if (management.IsClosed)
+            {
+                return BadRequest("Cannot update a closed challenge assignment.");
+            }
 
-            return RedirectToAction("Management");
+            try
+            {
+                string newStateText = GetStateTextFromId(payload.StateId);
+                // Update using service methods that take text state? Or update entity directly?
+                // Option 1: Use service methods (preferred if they exist)
+                 await _managementService.UpdateState(characterId, challengeId, newStateText);
+                 await _managementService.UpdateManagementDetails(characterId, challengeId, payload.Details);
+                 // These service methods should call SaveChanges internally or require a separate call
+
+                // Option 2: Update entity directly (if service methods don't exist/fit)
+                // management.State = newStateText;
+                // management.Details = payload.Details;
+                // await _managementService.SaveChanges(); // Ensure this saves the changes
+
+                return NoContent(); // Success
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw; // Or handle concurrency
+            }
+            catch (Exception ex)
+            {
+                 // Log ex
+                return StatusCode(500, "An error occurred while updating the assignment.");
+            }
         }
 
-        private readonly IManagementService myManagementService;
-        private readonly ICharacterService myCharacterService;
-        private readonly IChallengeService myChallengeService;
+        // POST: api/Management/close/{characterId}/{challengeId}
+        [HttpPost("close/{characterId}/{challengeId}")]
+        public async Task<IActionResult> CloseAssignedChallenge(int characterId, int challengeId)
+        {
+            var character = await _characterService.GetCharacterById(characterId);
+            var challenge = await _challengeService.GetChallengeById(challengeId);
+            var management = await _managementService.GetManagement(characterId, challengeId);
+
+            if (character == null || challenge == null || management == null)
+            {
+                return NotFound("Character, Challenge, or Assignment not found.");
+            }
+
+            if (management.IsClosed)
+            {
+                return BadRequest("Challenge assignment is already closed.");
+            }
+
+            // Require 'Completed' state to close and gain stats
+            string completedStateText = GetStateTextFromId(3); // 3 = Completed
+            if (management.State != completedStateText)
+            {
+                return BadRequest($"Challenge must be in '{completedStateText}' state to close and gain stats.");
+            }
+
+            try
+            {
+                // Update character stats
+                character.Bravery += challenge.GainableBravery ?? 0;
+                character.Trust += challenge.GainableTrust ?? 0;
+                character.Presence += challenge.GainablePresence ?? 0;
+                character.Growth += challenge.GainableGrowth ?? 0;
+                character.Care += challenge.GainableCare ?? 0;
+
+                // Mark management as closed
+                management.IsClosed = true;
+
+                // Save changes for both character stats and management status
+                await _managementService.SaveChanges(); // Service should save context changes
+
+                 // Map updated character to return it
+                 var updatedCharacterViewModel = new CharacterViewModel {
+                     Id = character.ID,
+                     Name = character.Name,
+                     Bravery = character.Bravery,
+                     Trust = character.Trust,
+                     Presence = character.Presence,
+                     Growth = character.Growth,
+                     Care = character.Care
+                 };
+
+                // Return 200 OK with the updated character data
+                return Ok(updatedCharacterViewModel);
+            }
+            catch (Exception ex)
+            {
+                // Log ex
+                return StatusCode(500, "An error occurred while closing the challenge.");
+            }
+        }
+
+
+        // Helper from original MVC controller - check if stats are sufficient
+        private bool IsStatSufficient(int characterStat, int? requiredStat)
+        {
+            return requiredStat == null || characterStat >= requiredStat.Value;
+        }
     }
 }

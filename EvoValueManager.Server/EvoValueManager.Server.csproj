@@ -45,7 +45,22 @@
 
     <Target Name="EnsureDistExists" BeforeTargets="Build">
         <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" Condition="!Exists('$(SpaRoot)node_modules')" />
-        <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" Condition="!Exists('$(SpaRoot)dist')" />
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm run cleanDist" ConsoleToMsBuild="true" Condition="Exists('$(SpaRoot)\package.json')"/>
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" ConsoleToMsBuild="true">
+            <Output TaskParameter="ExitCode" PropertyName="BuildExitCode"/>
+            <Output TaskParameter="ConsoleOutput" PropertyName="BuildOutput"/>
+        </Exec>
+        <Error Condition="'$(BuildExitCode)' != '0'" Text="$(BuildOutput)" Importance="high"/>
     </Target>
 
+    <Target Name="ForceBuildOnDebug" BeforeTargets="SpaProxyServer">
+        <Message Importance="high" Text="Building client-side assets using 'npm run build'..."/>
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm run cleanDist" ConsoleToMsBuild="true" Condition="Exists('$(SpaRoot)\package.json')"/>
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" ConsoleToMsBuild="true">
+            <Output TaskParameter="ExitCode" PropertyName="BuildExitCode"/>
+            <Output TaskParameter="ConsoleOutput" PropertyName="BuildOutput"/>
+        </Exec>
+        <Error Condition="'$(BuildExitCode)' != '0'" Text="$(BuildOutput)" Importance="high"/>
+    </Target>
+    
 </Project>

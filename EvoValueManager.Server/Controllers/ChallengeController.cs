@@ -2,118 +2,160 @@
 using EvoCharacterManager.Models.ViewModels;
 using EvoCharacterManager.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace EvoCharacterManager.Controllers
 {
-    public class ChallengeController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ChallengeController : ControllerBase
     {
+        private readonly IChallengeService _challengeService;
+
         public ChallengeController(IChallengeService service)
         {
-            myService = service;
+            _challengeService = service;
         }
 
-        public async Task<IActionResult> Challenge(int? selectedChallengeId, bool? addChallenge)
+        // GET: api/Challenge
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ChallengeViewModel>>> GetChallenges()
         {
-            var challenges = await myService.GetAllChallenges();
-
-            var challengeViewModels = challenges.Select(c => new ChallengeViewModel
+            var challenges = await _challengeService.GetAllChallenges();
+            
+            var viewModels = challenges.Select(c => new ChallengeViewModel
             {
                 Id = c.ID,
-                Title = c.Title
+                Title = c.Title,
+                RequiredBravery = c.RequiredBravery,
+                RequiredTrust = c.RequiredTrust,
+                RequiredPresence = c.RequiredPresence,
+                RequiredGrowth = c.RequiredGrowth,
+                RequiredCare = c.RequiredCare,
+                GainableBravery = c.GainableBravery,
+                GainableTrust = c.GainableTrust,
+                GainablePresence = c.GainablePresence,
+                GainableGrowth = c.GainableGrowth,
+                GainableCare = c.GainableCare
             }).ToList();
 
-            ChallengeViewModel? selectedChallenge = null;
-            if (selectedChallengeId.HasValue)
+            return Ok(viewModels);
+        }
+
+        // GET: api/Challenge/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ChallengeViewModel>> GetChallenge(int id)
+        {
+            var challenge = await _challengeService.GetChallengeById(id);
+
+            if (challenge == null)
             {
-                var challenge = await myService.GetChallengeById(selectedChallengeId.Value);
-                if (challenge != null)
-                {
-                    selectedChallenge = new ChallengeViewModel
-                    {
-                        Id = challenge.ID,
-                        Title = challenge.Title,
-                        RequiredBravery = challenge.RequiredBravery,
-                        RequiredTrust = challenge.RequiredTrust,
-                        RequiredPresence = challenge.RequiredPresence,
-                        RequiredGrowth = challenge.RequiredGrowth,
-                        RequiredCare = challenge.RequiredCare,
-                        GainableBravery = challenge.GainableBravery,
-                        GainableTrust = challenge.GainableTrust,
-                        GainablePresence = challenge.GainablePresence,
-                        GainableGrowth = challenge.GainableGrowth,
-                        GainableCare = challenge.GainableCare
-                    };
-                }
+                return NotFound();
             }
 
-            var viewModel = new ChallengePageViewModel
+            var viewModel = new ChallengeViewModel
             {
-                SelectedChallengeId = selectedChallengeId ?? 0,
-                SelectedChallenge = selectedChallenge,
-                SelectableChallenges = new SelectList(challengeViewModels, "Id", "Title"),
-                AddChallenge = addChallenge ?? false
+                 Id = challenge.ID,
+                 Title = challenge.Title,
+                 RequiredBravery = challenge.RequiredBravery,
+                 RequiredTrust = challenge.RequiredTrust,
+                 RequiredPresence = challenge.RequiredPresence,
+                 RequiredGrowth = challenge.RequiredGrowth,
+                 RequiredCare = challenge.RequiredCare,
+                 GainableBravery = challenge.GainableBravery,
+                 GainableTrust = challenge.GainableTrust,
+                 GainablePresence = challenge.GainablePresence,
+                 GainableGrowth = challenge.GainableGrowth,
+                 GainableCare = challenge.GainableCare
             };
 
-            return View(viewModel);
+            return Ok(viewModel);
         }
 
+        // POST: api/Challenge
         [HttpPost]
-        public IActionResult ChallengeSelection(ChallengePageViewModel viewModel)
+        public async Task<ActionResult<ChallengeViewModel>> PostChallenge([FromBody] ChallengeViewModel challengeViewModel)
         {
-            return RedirectToAction("Challenge", new { selectedChallengeId = viewModel.SelectedChallengeId });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> SaveChallengeChange(ChallengePageViewModel viewModel)
-        {
-            var challenge = await myService.GetChallengeById(viewModel.SelectedChallengeId);
-            if (challenge != null && viewModel.SelectedChallenge != null)
+            if (string.IsNullOrWhiteSpace(challengeViewModel.Title))
             {
-                challenge.Title = viewModel.SelectedChallenge.Title;
-                challenge.RequiredBravery = viewModel.SelectedChallenge.RequiredBravery;
-                challenge.RequiredTrust = viewModel.SelectedChallenge.RequiredTrust;
-                challenge.RequiredPresence = viewModel.SelectedChallenge.RequiredPresence;
-                challenge.RequiredGrowth = viewModel.SelectedChallenge.RequiredGrowth;
-                challenge.RequiredCare = viewModel.SelectedChallenge.RequiredCare;
-                challenge.GainableBravery = viewModel.SelectedChallenge.GainableBravery;
-                challenge.GainableTrust = viewModel.SelectedChallenge.GainableTrust;
-                challenge.GainablePresence = viewModel.SelectedChallenge.GainablePresence;
-                challenge.GainableGrowth = viewModel.SelectedChallenge.GainableGrowth;
-                challenge.GainableCare = viewModel.SelectedChallenge.GainableCare;
+                return BadRequest("Challenge title cannot be empty.");
+            }
+            
+            var challenge = new Challenge
+            {
+                ID = challengeViewModel.Id,
+                Title = challengeViewModel.Title,
+                RequiredBravery = challengeViewModel.RequiredBravery,
+                RequiredTrust = challengeViewModel.RequiredTrust,
+                RequiredPresence = challengeViewModel.RequiredPresence,
+                RequiredGrowth = challengeViewModel.RequiredGrowth,
+                RequiredCare = challengeViewModel.RequiredCare,
+                GainableBravery = challengeViewModel.GainableBravery,
+                GainableTrust = challengeViewModel.GainableTrust,
+                GainablePresence = challengeViewModel.GainablePresence,
+                GainableGrowth = challengeViewModel.GainableGrowth,
+                GainableCare = challengeViewModel.GainableCare
+            };
 
-                await myService.SaveChanges();
+            await _challengeService.SaveNewChallenge(challenge);
+            
+            var createdViewModel = new ChallengeViewModel
+            {
+                Title = challenge.Title,
+                RequiredBravery = challenge.RequiredBravery,
+                RequiredTrust = challenge.RequiredTrust,
+                RequiredPresence = challenge.RequiredPresence,
+                RequiredGrowth = challenge.RequiredGrowth,
+                RequiredCare = challenge.RequiredCare,
+                GainableBravery = challenge.GainableBravery,
+                GainableTrust = challenge.GainableTrust,
+                GainablePresence = challenge.GainablePresence,
+                GainableGrowth = challenge.GainableGrowth,
+                GainableCare = challenge.GainableCare
+            };
+
+
+            return CreatedAtAction(nameof(GetChallenge), new { id = challenge.ID }, createdViewModel);
+        }
+
+        // PUT: api/Challenge/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutChallenge(int id, [FromBody] ChallengeViewModel challengeViewModel)
+        {
+            if (id != challengeViewModel.Id)
+            {
+                return BadRequest("ID mismatch.");
             }
 
-            return RedirectToAction("Challenge", new { selectedChallengeId = viewModel.SelectedChallengeId });
-        }
-        [HttpPost]
-        public IActionResult AddChallenge(ChallengePageViewModel viewModel)
-        {
-            return RedirectToAction("Challenge", new { selectedChallengeId = viewModel.SelectedChallengeId, addChallenge=!viewModel.AddChallenge });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> SaveNewChallenge(ChallengePageViewModel viewModel)
-        {
-            Challenge challenge = new Challenge
+            if (string.IsNullOrWhiteSpace(challengeViewModel.Title))
             {
-                Title = viewModel.NewChallenge.Title,
-                RequiredBravery = viewModel.NewChallenge.RequiredBravery,
-                RequiredTrust = viewModel.NewChallenge.RequiredTrust,
-                RequiredPresence = viewModel.NewChallenge.RequiredPresence,
-                RequiredGrowth = viewModel.NewChallenge.RequiredGrowth,
-                RequiredCare = viewModel.NewChallenge.RequiredCare,
-                GainableBravery = viewModel.NewChallenge.GainableBravery,
-                GainableTrust = viewModel.NewChallenge.GainableTrust,
-                GainablePresence = viewModel.NewChallenge.GainablePresence,
-                GainableGrowth = viewModel.NewChallenge.GainableGrowth,
-                GainableCare = viewModel.NewChallenge.GainableCare
-            };
-            await myService.SaveNewChallenge(challenge);
-            return RedirectToAction("Challenge", new { selectedChallengeId = viewModel.SelectedChallengeId });
-        }
+                return BadRequest("Challenge title cannot be empty.");
+            }
 
-        private readonly IChallengeService myService;
+
+            var challengeToUpdate = await _challengeService.GetChallengeById(id);
+
+            if (challengeToUpdate == null)
+            {
+                return NotFound();
+            }
+
+            challengeToUpdate.Title = challengeViewModel.Title;
+            challengeToUpdate.RequiredBravery = challengeViewModel.RequiredBravery;
+            challengeToUpdate.RequiredTrust = challengeViewModel.RequiredTrust;
+            challengeToUpdate.RequiredPresence = challengeViewModel.RequiredPresence;
+            challengeToUpdate.RequiredGrowth = challengeViewModel.RequiredGrowth;
+            challengeToUpdate.RequiredCare = challengeViewModel.RequiredCare;
+            challengeToUpdate.GainableBravery = challengeViewModel.GainableBravery;
+            challengeToUpdate.GainableTrust = challengeViewModel.GainableTrust;
+            challengeToUpdate.GainablePresence = challengeViewModel.GainablePresence;
+            challengeToUpdate.GainableGrowth = challengeViewModel.GainableGrowth;
+            challengeToUpdate.GainableCare = challengeViewModel.GainableCare;
+
+            await _challengeService.SaveChanges();
+
+            return NoContent();
+        }
     }
 }
