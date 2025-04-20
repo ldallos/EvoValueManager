@@ -1,5 +1,5 @@
 ﻿import {useState, useEffect, ChangeEvent} from 'react';
-import * as api from '../services/api';
+import * as api from '../api/api';
 import {Challenge} from '../interfaces/Challenge';
 import ChallengeSelector from '../components/ChallengeSelector';
 import ChallengeForm from '../components/ChallengeForm';

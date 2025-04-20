@@ -1,5 +1,5 @@
 ﻿import {useState, useEffect, ChangeEvent} from 'react';
-import * as api from '../services/api';
+import * as api from '../api/api';
 import {Character} from '../interfaces/Character';
 import CharacterSelector from '../components/CharacterSelector';
 import CharacterForm from '../components/CharacterForm';
