@@ -38,7 +38,6 @@
     font-weight: bold;
 }
 
-
 .management-page .details-action-row {
     margin-top: 20px;
     padding: 15px;
@@ -84,14 +83,14 @@
     min-height: 100px;
 }
 
-
 .management-page .action-buttons {
     margin-top: 15px;
     display: flex;
     gap: 10px;
 }
 
-.character-form, .challenge-form {
+.character-form,
+.challenge-form {
     padding: 20px;
     border: 1px solid #ddd;
     border-radius: 5px;
