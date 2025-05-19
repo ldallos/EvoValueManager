@@ -1,5 +1,5 @@
-﻿import {ChangeEvent} from 'react';
-import {Challenge} from '../interfaces/Challenge';
+﻿import { ChangeEvent } from "react";
+import { Challenge } from "../interfaces/Challenge";
 
 interface ChallengeSelectorProps {
     challenges: Challenge[];
@@ -10,12 +10,12 @@ interface ChallengeSelectorProps {
 }
 
 function ChallengeSelector({
-                               challenges,
-                               selectedId,
-                               onChange,
-                               label = "Kihivás kiválasztása:",
-                               disabled = false
-                           }: ChallengeSelectorProps) {
+    challenges,
+    selectedId,
+    onChange,
+    label = "Kihivás kiválasztása:",
+    disabled = false,
+}: ChallengeSelectorProps) {
     return (
         <div className="evo-margin evo-flex">
             <label className="evo-challenge-label">{label}</label>
@@ -25,8 +25,10 @@ function ChallengeSelector({
                 value={selectedId ?? ""}
                 disabled={disabled || challenges.length === 0}
             >
-                <option value="" disabled>Válassz egy kihívást</option>
-                {challenges.map(chal => (
+                <option value="" disabled>
+                    Válassz egy kihívást
+                </option>
+                {challenges.map((chal) => (
                     <option key={chal.id} value={chal.id}>
                         {chal.title}
                     </option>

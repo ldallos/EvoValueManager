@@ -1,32 +1,44 @@
-﻿import {useState, useEffect, FormEvent, ChangeEvent} from 'react';
-import {Character} from '../interfaces/Character';
-import {TRAITS} from '../constants/traits';
+﻿import { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import { Character } from "../interfaces/Character";
+import { TRAITS } from "../constants/traits";
+import { useTranslation } from "react-i18next";
 
 interface CharacterFormProps {
     initialData?: Character | null;
-    onSubmit: (characterData: Omit<Character, 'id'> | Character) => void;
+    onSubmit: (characterData: Omit<Character, "id"> | Character) => void;
     onCancel?: () => void;
     isSaving: boolean;
 }
 
-type CharacterFormData = Omit<Character, 'id'>;
+type CharacterFormData = Omit<Character, "id">;
 
-const defaultFormData: Omit<Character, 'id'> = {
-    name: '', bravery: 1, trust: 1, presence: 1, growth: 1, care: 1
+const defaultFormData: Omit<Character, "id"> = {
+    name: "",
+    bravery: 1,
+    trust: 1,
+    presence: 1,
+    growth: 1,
+    care: 1,
 };
 
-function CharacterForm({initialData, onSubmit, onCancel, isSaving}: CharacterFormProps) {
+function CharacterForm({
+    initialData,
+    onSubmit,
+    onCancel,
+    isSaving,
+}: CharacterFormProps) {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState<CharacterFormData>(() => {
         if (initialData) {
-            const {id, ...rest} = initialData;
+            const { id, ...rest } = initialData;
             return rest;
         }
-        return {...defaultFormData};
+        return { ...defaultFormData };
     });
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     useEffect(() => {
-        setFormData(initialData ? {...initialData} : {...defaultFormData});
+        setFormData(initialData ? { ...initialData } : { ...defaultFormData });
         setErrors({});
     }, [initialData]);
 
@@ -35,24 +47,29 @@ function CharacterForm({initialData, onSubmit, onCancel, isSaving}: CharacterFor
         if (!formData.name || formData.name.length < 3) {
             newErrors.name = "Name must be at least 3 characters long.";
         }
-        TRAITS.forEach(trait => {
-            const value = formData[trait.property as keyof CharacterFormData] as number;
+        TRAITS.forEach((trait) => {
+            const value = formData[
+                trait.property as keyof CharacterFormData
+            ] as number;
             if (value < 1 || value > 100) {
-                newErrors[trait.property] = `${trait.title} must be between 1 and 100.`;
+                newErrors[trait.property] =
+                    `${trait.title} must be between 1 and 100.`;
             }
         });
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const {name, value, type} = e.target;
-        setFormData(prev => ({
+    const handleChange = (
+        e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => {
+        const { name, value, type } = e.target;
+        setFormData((prev) => ({
             ...prev,
-            [name]: type === 'number' ? parseInt(value, 10) || 0 : value
+            [name]: type === "number" ? parseInt(value, 10) || 0 : value,
         }));
         if (errors[name]) {
-            setErrors(prev => ({...prev, [name]: ''}));
+            setErrors((prev) => ({ ...prev, [name]: "" }));
         }
     };
 
@@ -65,10 +82,12 @@ function CharacterForm({initialData, onSubmit, onCancel, isSaving}: CharacterFor
 
     return (
         <form onSubmit={handleSubmit} className="character-form">
-            <h3>{initialData ? 'Csapattag módosítása' : 'Csapattag felvétele'}</h3>
+            <h3>
+                {initialData ? "Csapattag módosítása" : "Csapattag felvétele"}
+            </h3>
 
             <div className="form-group">
-                <label htmlFor="name">Név:</label>
+                <label htmlFor="name">{t("name")}</label>
                 <input
                     type="text"
                     id="name"
@@ -79,10 +98,12 @@ function CharacterForm({initialData, onSubmit, onCancel, isSaving}: CharacterFor
                     maxLength={50}
                     required
                 />
-                {errors.name && <span className="error-message">{errors.name}</span>}
+                {errors.name && (
+                    <span className="error-message">{errors.name}</span>
+                )}
             </div>
 
-            {TRAITS.map(trait => (
+            {TRAITS.map((trait) => (
                 <div className="form-group" key={trait.property}>
                     <label htmlFor={trait.property}>{trait.title}:</label>
                     <input
@@ -90,22 +111,41 @@ function CharacterForm({initialData, onSubmit, onCancel, isSaving}: CharacterFor
                         id={trait.property}
                         name={trait.property}
                         className="form-control"
-                        value={formData[trait.property as keyof CharacterFormData]}
+                        value={
+                            formData[trait.property as keyof CharacterFormData]
+                        }
                         onChange={handleChange}
                         min="1"
                         max="100"
                         required
                     />
-                    {errors[trait.property] && <span className="error-message">{errors[trait.property]}</span>}
+                    {errors[trait.property] && (
+                        <span className="error-message">
+                            {errors[trait.property]}
+                        </span>
+                    )}
                 </div>
             ))}
 
             <div className="form-actions">
-                <button type="submit" disabled={isSaving} className="btn primary">
-                    {isSaving ? 'Saving...' : (initialData ? 'Változtatások mentése' : 'Karakter felvétele')}
+                <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="btn primary"
+                >
+                    {isSaving
+                        ? "Saving..."
+                        : initialData
+                          ? "Változtatások mentése"
+                          : "Karakter felvétele"}
                 </button>
                 {onCancel && (
-                    <button type="button" onClick={onCancel} disabled={isSaving} className="btn">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        disabled={isSaving}
+                        className="btn"
+                    >
                         Mégsem
                     </button>
                 )}
@@ -114,5 +154,4 @@ function CharacterForm({initialData, onSubmit, onCancel, isSaving}: CharacterFor
         </form>
     );
 }
-
 export default CharacterForm;
