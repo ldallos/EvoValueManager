@@ -8,7 +8,7 @@ namespace EvoCharacterManager
 {
     public class Program
     {
-        public static bool UseInMemory => true;
+        public static bool UseInMemory => false;
 
         public static void Main(string[] args)
         {
@@ -19,6 +19,14 @@ namespace EvoCharacterManager
             ConfigureMvc(builder);
 
             var app = builder.Build();
+            
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<CharacterManagerContext>();
+                dbContext.Database.EnsureCreated(); // létrehozzuk a táblákat
+                DatabaseSeeder.SeedInitialData(dbContext); //adatok betöltése ha üres az adatbázis
+            }
+            
 
             ConfigureMiddleware(app, builder);
             ConfigureEndpoints(app);
@@ -35,9 +43,9 @@ namespace EvoCharacterManager
 
         private static void ConfigureDatabase(WebApplicationBuilder builder)
         {
+            // builder.Services.AddDbContext<CharacterManagerContext>(options => options.UseInMemoryDatabase("TestDatabase"));
             builder.Services.AddDbContext<CharacterManagerContext>(options =>
-                options.UseInMemoryDatabase("TestDatabase"));
-
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
         }
 
         private static void ConfigureMvc(WebApplicationBuilder builder)
