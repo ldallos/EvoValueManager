@@ -31,6 +31,8 @@ namespace EvoCharacterManager
             builder.Services.AddTransient<ICharacterService, CharacterService>();
             builder.Services.AddTransient<IChallengeService, ChallengeService>();
             builder.Services.AddTransient<IManagementService, ManagementService>();
+            builder.Services.AddTransient<IToolService, ToolService>();
+            builder.Services.AddTransient<ICharacterToolService, CharacterToolService>();
         }
 
         private static void ConfigureDatabase(WebApplicationBuilder builder)

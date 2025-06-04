@@ -5,6 +5,8 @@ import Navigation from "./components/Navigation";
 import "./App.css";
 import ManagementPage from "./pages/ManagementPage.tsx";
 import ChallengePage from "./pages/ChallengePage.tsx";
+import ToolsPage from "./pages/ToolsPage.tsx";
+import ToolAssignmentPage from "./pages/ToolAssignmentPage.tsx";
 
 function App() {
     return (
@@ -19,6 +21,8 @@ function App() {
                             path="/management"
                             element={<ManagementPage />}
                         />
+                        <Route path="/tools" element={<ToolsPage />} />
+                        <Route path="/tool-assignment" element={<ToolAssignmentPage />} />
                         <Route path="/" element={<HomePage />} />
                     </Routes>
                 </main>

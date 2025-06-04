@@ -3,7 +3,6 @@ import * as api from "../api/api";
 import { Challenge } from "../interfaces/Challenge";
 import ChallengeSelector from "../components/ChallengeSelector";
 import ChallengeForm from "../components/ChallengeForm";
-import { useTranslation } from "react-i18next";
 
 function ChallengePage() {
     const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -13,7 +12,6 @@ function ChallengePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
-    const { t } = useTranslation();
 
     useEffect(() => {
         const loadChallenges = async () => {
