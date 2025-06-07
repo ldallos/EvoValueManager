@@ -3,7 +3,6 @@ import * as api from "../api/api";
 import { Character } from "../interfaces/Character";
 import CharacterSelector from "../components/CharacterSelector";
 import CharacterForm from "../components/CharacterForm";
-//import { useTranslation } from "react-i18next";
 
 function CharacterPage() {
     const [characters, setCharacters] = useState<Character[]>([]);
@@ -13,7 +12,6 @@ function CharacterPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
-   // const { t } = useTranslation();
 
     useEffect(() => {
         const loadCharacters = async () => {
