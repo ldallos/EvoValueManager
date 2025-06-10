@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using EvoCharacterManager.Data;
+using EvoCharacterManager.Helpers;
 using EvoCharacterManager.Services;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.SpaProxy;
@@ -8,7 +9,7 @@ namespace EvoCharacterManager
 {
     public class Program
     {
-        public static bool UseInMemory => true;
+        public static bool UseInMemory = true;
 
         public static void Main(string[] args)
         {
@@ -19,6 +20,16 @@ namespace EvoCharacterManager
             ConfigureMvc(builder);
 
             var app = builder.Build();
+            
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<CharacterManagerContext>();
+                dbContext.Database.EnsureCreated(); // létrehozzuk a táblákat
+                
+                var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+                seeder.SeedInitialData();
+            }
+            
 
             ConfigureMiddleware(app, builder);
             ConfigureEndpoints(app);
@@ -31,13 +42,22 @@ namespace EvoCharacterManager
             builder.Services.AddTransient<ICharacterService, CharacterService>();
             builder.Services.AddTransient<IChallengeService, ChallengeService>();
             builder.Services.AddTransient<IManagementService, ManagementService>();
+            builder.Services.AddTransient<DatabaseSeeder>();
+            builder.Services.AddTransient<NameGenerator>();
         }
 
         private static void ConfigureDatabase(WebApplicationBuilder builder)
         {
-            builder.Services.AddDbContext<CharacterManagerContext>(options =>
-                options.UseInMemoryDatabase("TestDatabase"));
-
+            UseInMemory = builder.Configuration.GetValue<bool>("UseInMemoryDatabase");
+            if (UseInMemory)
+            {
+                builder.Services.AddDbContext<CharacterManagerContext>(options => options.UseInMemoryDatabase("TestDatabase"));
+            }
+            else
+            {
+                builder.Services.AddDbContext<CharacterManagerContext>(options => 
+                    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+            }
         }
 
         private static void ConfigureMvc(WebApplicationBuilder builder)

@@ -12,7 +12,6 @@ import {
     getStateId,
     TRAITS,
 } from "../constants/traits";
-import { useTranslation } from "react-i18next";
 
 type AssignmentType = "available" | "assigned";
 
@@ -38,8 +37,7 @@ function ManagementPage() {
     const [error, setError] = useState<string | null>(null);
 
     const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
-    const { t } = useTranslation();
+    
 
     useEffect(() => {
         const loadCharacters = async () => {
