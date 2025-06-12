@@ -3,7 +3,6 @@ using EvoCharacterManager.Data;
 using EvoCharacterManager.Helpers;
 using EvoCharacterManager.Services;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.AspNetCore.SpaProxy;
 
 namespace EvoCharacterManager
 {

@@ -2,9 +2,6 @@
 using EvoCharacterManager.Models.ViewModels;
 using EvoCharacterManager.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace EvoCharacterManager.Controllers
 {

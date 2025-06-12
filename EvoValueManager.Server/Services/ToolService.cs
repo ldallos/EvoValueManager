@@ -1,8 +1,6 @@
 ﻿using EvoCharacterManager.Data;
 using EvoCharacterManager.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace EvoCharacterManager.Services
 {

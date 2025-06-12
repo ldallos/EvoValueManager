@@ -1,6 +1,5 @@
 using EvoCharacterManager.Models.Entities;
 using EvoCharacterManager.Helpers;
-using System;
 
 namespace EvoCharacterManager.Data
 {
