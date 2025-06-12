@@ -30,10 +30,26 @@ function Navigation() {
                 </li>
                 <li>
                     <NavLink
+                        to="/tools"
+                        className={({ isActive }) => (isActive ? "active" : "")}
+                    >
+                        Eszközök
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink
                         to="/management"
                         className={({ isActive }) => (isActive ? "active" : "")}
                     >
                         Vezetés/Fejlesztés
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink
+                        to="/tool-assignment"
+                        className={({ isActive }) => (isActive ? "active" : "")}
+                    >
+                        Eszköz hozzárendelés
                     </NavLink>
                 </li>
             </ul>

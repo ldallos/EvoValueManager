@@ -2,6 +2,7 @@
 import {Character} from "../interfaces/Character.ts";
 import {Challenge} from "../interfaces/Challenge.ts";
 import {ManagementDetails, AssignChallenge, UpdateManagement} from "../interfaces/Management.ts";
+import {Tool} from "../interfaces/Tool.ts";
 
 const API_BASE_URL = '/api';
 
@@ -65,3 +66,33 @@ export const updateManagement = (characterId: number, challengeId: number, paylo
 
 export const closeChallenge = (characterId: number, challengeId: number): Promise<Character> =>
     apiClient.post(`/Management/close/${characterId}/${challengeId}`).then(res => res.data);
+
+
+
+// TOOL API
+export const getTools = (): Promise<Tool[]> =>
+    apiClient.get('/Tool').then(res => res.data);
+
+export const getToolById = (id: number): Promise<Tool> =>
+    apiClient.get(`/Tool/${id}`).then(res => res.data);
+
+export const createTool = (toolData: Omit<Tool, 'id'>): Promise<Tool> =>
+    apiClient.post('/Tool', toolData).then(res => res.data);
+
+export const updateTool = (id: number, toolData: Tool): Promise<void> =>
+    apiClient.put(`/Tool/${id}`, toolData);
+
+
+
+// CHARACTER-TOOL API
+export const getAssignedToolsForCharacter = (characterId: number): Promise<Tool[]> =>
+    apiClient.get(`/charactertool/${characterId}/assigned`).then(res => res.data);
+
+export const getAvailableToolsForCharacter = (characterId: number): Promise<Tool[]> =>
+    apiClient.get(`/charactertool/${characterId}/available`).then(res => res.data);
+
+export const assignToolToCharacter = (characterId: number, toolId: number): Promise<{ message: string }> =>
+    apiClient.post(`/charactertool/${characterId}/assign/${toolId}`).then(res => res.data);
+
+export const unassignToolFromCharacter = (characterId: number, toolId: number): Promise<{ message: string }> =>
+    apiClient.delete(`/charactertool/${characterId}/unassign/${toolId}`).then(res => res.data);
