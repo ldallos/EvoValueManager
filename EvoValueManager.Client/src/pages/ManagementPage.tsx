@@ -19,9 +19,9 @@ type AssignmentType = "available" | "assigned";
 function ManagementPage() {
     const [characters, setCharacters] = useState<Character[]>([]);
     const [challenges, setChallenges] = useState<Challenge[]>([]);
-    const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null,);
+    const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
     const [effectiveSelectedCharacter, setEffectiveSelectedCharacter] = useState<Character | null>(null);
-    const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null,);
+    const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
     const [managementDetails, setManagementDetails] =
         useState<ManagementDetails | null>(null);
     const [assignmentType, setAssignmentType] =
