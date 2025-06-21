@@ -16,10 +16,13 @@ function CharacterSelector({
     label = "Csapattag kiválasztása:",
     disabled = false,
 }: CharacterSelectorProps) {
+    const selectorId = "character-selector";
     return (
         <div className="evo-margin evo-flex">
-            <label className="evo-character-label">{label}</label>
+            <label htmlFor={selectorId} className="evo-character-label">{label}</label>
             <select
+                id={selectorId}
+                name={selectorId}
                 className="evo-dropdown"
                 onChange={onChange}
                 value={selectedId ?? ""}

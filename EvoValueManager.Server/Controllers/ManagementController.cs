@@ -3,29 +3,10 @@ using EvoCharacterManager.Services;
 using EvoValueManager.Models.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using EvoCharacterManager.Dto;
 
 namespace EvoCharacterManager.Controllers
 {
-    public class AssignChallengePayload
-    {
-        public int CharacterId { get; set; }
-        public int ChallengeId { get; set; }
-        public int StateId { get; set; }
-        public string? Details { get; set; }
-    }
-
-    public class UpdateManagementPayload
-    {
-        public int StateId { get; set; }
-        public string? Details { get; set; }
-    }
-
-    public class ManagementDetailsViewModel
-    {
-        public string State { get; set; } = string.Empty;
-        public string? Details { get; set; }
-        public bool IsClosed { get; set; }
-    }
 
     [ApiController]
     [Route("api/[controller]")]
@@ -187,7 +168,6 @@ namespace EvoCharacterManager.Controllers
 
             try
             {
-                string stateText = GetStateTextFromId(payload.StateId);
                 await _managementService.AssignChallenge(payload.CharacterId, payload.ChallengeId, payload.StateId,
                     payload.Details);
 

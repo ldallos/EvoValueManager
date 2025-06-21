@@ -19,11 +19,13 @@ function ToolSelector({
                       }: ToolSelectorProps) {
     const { t } = useTranslation();
     const displayLabel = label || t('selectTool');
-
+    const selectorId = "tool-selector";
     return (
         <div className="evo-margin evo-flex">
-            <label className="evo-character-label">{displayLabel}</label>
+            <label htmlFor={selectorId} className="evo-character-label">{displayLabel}</label>
             <select
+                id={selectorId}
+                name={selectorId}
                 className="evo-dropdown evo-margin"
                 onChange={onChange}
                 value={selectedId ?? ""}

@@ -2,6 +2,7 @@
 import { Tool } from "../interfaces/Tool";
 import { TRAITS } from "../constants/traits";
 import { useTranslation } from "react-i18next";
+import { ErrorDictionary } from "../types/common";
 
 interface ToolFormProps {
     initialData?: Tool | null;
@@ -10,7 +11,8 @@ interface ToolFormProps {
     isSaving: boolean;
 }
 
-type ToolBonusKey = "braveryBonus" | "trustBonus" | "presenceBonus" | "growthBonus" | "careBonus";
+type ToolStatKey = Exclude<keyof Omit<Tool, "id" | "name" | "description">, undefined>;
+
 
 const defaultFormData: Omit<Tool, "id"> = {
     name: "",
@@ -32,7 +34,7 @@ function ToolForm({
     const [formData, setFormData] = useState<Omit<Tool, "id"> | Tool>(
         initialData ? { ...initialData } : { ...defaultFormData },
     );
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [errors, setErrors] = useState<ErrorDictionary>({});
 
     useEffect(() => {
         setFormData(initialData ? { ...initialData } : { ...defaultFormData });
@@ -40,17 +42,17 @@ function ToolForm({
     }, [initialData]);
 
     const validate = (): boolean => {
-        const newErrors: { [key: string]: string } = {};
+        const newErrors: ErrorDictionary = {};
         if (!formData.name || formData.name.trim().length === 0) {
-            newErrors.name = "Eszköz azonosító (név) kötelező.";
+            newErrors.name = t("toolNameRequiredError");
         }
 
         TRAITS.forEach(trait => {
-            const bonusValueKey = `${trait.property}Bonus` as ToolBonusKey;
+            const bonusValueKey = `${trait.property}Bonus` as ToolStatKey;
             const bonusValue = formData[bonusValueKey];
 
             if (bonusValue != null && bonusValue < 0) {
-                newErrors[bonusValueKey] = `${trait.title} bónusz nem lehet negatív.`;
+                newErrors[bonusValueKey] = t("bonusNonNegativeError", { trait: t(trait.property) });
             }
         });
 
@@ -82,17 +84,21 @@ function ToolForm({
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         if (validate()) {
-            onSubmit(formData);
+            if (initialData && initialData.id) {
+                onSubmit({ ...formData, id: initialData.id } as Tool);
+            } else {
+                onSubmit(formData);
+            }
         }
     };
-
-    const renderBonusInput = (traitProperty: string, traitTitle: string) => {
-        const name = `${traitProperty}Bonus` as ToolBonusKey;
+    
+    const renderBonusInput = (traitProperty: string) => {
+        const name = `${traitProperty}Bonus` as ToolStatKey;
         const value = formData[name];
 
         return (
             <div className="form-group form-group-stat" key={name}>
-                <label htmlFor={name}>{traitTitle} bónusz:</label>
+                <label htmlFor={name}>{t(traitProperty)} {t("bonus")}:</label>
                 <input
                     className="form-control"
                     type="number"
@@ -146,7 +152,7 @@ function ToolForm({
                 <legend>{t("valueBonuses")}</legend>
                 <div className="stats-grid">
                     {TRAITS.map((trait) =>
-                        renderBonusInput(trait.property, trait.title),
+                        renderBonusInput(trait.property),
                     )}
                 </div>
             </fieldset>

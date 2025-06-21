@@ -9,7 +9,7 @@ function ToolsPage() {
     const { t } = useTranslation();
     const [tools, setTools] = useState<Tool[]>([]);
     const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -22,14 +22,14 @@ function ToolsPage() {
                 const data = await api.getTools();
                 setTools(data);
             } catch (err) {
-                setError("Failed to load tools.");
+                setError(t("failedToLoadToolsError"));
                 console.error(err);
             } finally {
                 setIsLoading(false);
             }
         };
         loadTools();
-    }, []);
+    }, [t]);
 
     const handleSelectTool = (event: ChangeEvent<HTMLSelectElement>) => {
         const selectedId = Number(event.target.value);
@@ -43,21 +43,23 @@ function ToolsPage() {
         setSelectedTool(null);
     };
 
-    const handleFormSubmit = async (toolData: Omit<Tool, "id"> | Tool) => {
+    const handleFormSubmit = async (toolPayload: Omit<Tool, "id"> | Tool) => {
         setIsSaving(true);
         setError(null);
         try {
-            if ("id" in toolData) {
-                await api.updateTool(toolData.id, toolData);
+            if ("id" in toolPayload && toolPayload.id) {
+                const toolToUpdate = toolPayload as Tool;
+                await api.updateTool(toolToUpdate.id, toolToUpdate);
                 setTools((prev) =>
-                    prev.map((t) => (t.id === toolData.id ? toolData : t)),
+                    prev.map((t) => (t.id === toolToUpdate.id ? toolToUpdate : t))
                 );
-                setSelectedTool(toolData);
+                setSelectedTool(toolToUpdate);
                 alert(t('toolUpdatedAlert'));
             } else {
-                const newTool = await api.createTool(toolData);
+                const newTool = await api.createTool(toolPayload as Omit<Tool, "id">);
                 setTools((prev) => [...prev, newTool]);
                 setShowAddForm(false);
+                setSelectedTool(newTool);
                 alert(t('toolAddedAlert'));
             }
         } catch (err: any) {
@@ -85,6 +87,7 @@ function ToolsPage() {
                 tools={tools}
                 selectedId={selectedTool?.id ?? null}
                 onChange={handleSelectTool}
+                label={t("selectToolLabel")}
                 disabled={isLoading || isSaving}
             />
 
@@ -96,14 +99,14 @@ function ToolsPage() {
                 {showAddForm ? t('back') : t('addNewToolButton')}
             </button>
 
-            {error && isSaving && <p className="error-message">{error}</p>}
+            {error && isSaving && <p className="error-message">{t("errorSavingForm")}: {error}</p>}
 
             {(showAddForm || (selectedTool && !showAddForm)) && (
                 <ToolForm
-                    key={selectedTool?.id ?? "new-tool"}
+                    key={selectedTool?.id ?? "new-tool-form"}
                     initialData={showAddForm ? null : selectedTool}
                     onSubmit={handleFormSubmit}
-                    onCancel={showAddForm ? toggleAddToolForm : undefined}
+                    onCancel={showAddForm ? toggleAddToolForm : () => setSelectedTool(null)}
                     isSaving={isSaving}
                 />
             )}

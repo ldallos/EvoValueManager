@@ -16,10 +16,13 @@ function ChallengeSelector({
     label = "Kihivás kiválasztása:",
     disabled = false,
 }: ChallengeSelectorProps) {
+    const selectorId = "challenge-selector";
     return (
         <div className="evo-margin evo-flex">
-            <label className="evo-challenge-label">{label}</label>
+            <label htmlFor={selectorId} className="evo-challenge-label">{label}</label>
             <select
+                id={selectorId}
+                name={selectorId}
                 className="evo-dropdown evo-margin"
                 onChange={onChange}
                 value={selectedId ?? ""}
