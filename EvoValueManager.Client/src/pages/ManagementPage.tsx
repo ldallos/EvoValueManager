@@ -1,9 +1,9 @@
-﻿import { useState, useEffect, ChangeEvent } from "react";
+﻿import { useState, useEffect, ChangeEvent, useCallback } from "react";
 import * as api from "../api/api";
-import axios from "axios";
 import { Character } from "../interfaces/Character";
 import { Challenge } from "../interfaces/Challenge";
 import { ManagementDetails } from "../interfaces/Management";
+import { Tool } from "../interfaces/Tool";
 import CharacterSelector from "../components/CharacterSelector";
 import ChallengeSelector from "../components/ChallengeSelector";
 import {
@@ -12,16 +12,17 @@ import {
     getStateId,
     TRAITS,
 } from "../constants/traits";
+import { useTranslation } from "react-i18next";
 
 type AssignmentType = "available" | "assigned";
 
 function ManagementPage() {
+    const { t } = useTranslation();
     const [characters, setCharacters] = useState<Character[]>([]);
     const [challenges, setChallenges] = useState<Challenge[]>([]);
-    const [selectedCharacter, setSelectedCharacter] =
-        useState<Character | null>(null);
-    const [selectedChallenge, setSelectedChallenge] =
-        useState<Challenge | null>(null);
+    const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+    const [effectiveSelectedCharacter, setEffectiveSelectedCharacter] = useState<Character | null>(null);
+    const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
     const [managementDetails, setManagementDetails] =
         useState<ManagementDetails | null>(null);
     const [assignmentType, setAssignmentType] =
@@ -30,72 +31,84 @@ function ManagementPage() {
     const [detailsText, setDetailsText] = useState("");
     const [selectedStateId, setSelectedStateId] = useState<number>(1);
 
-    const [isLoadingChars, setIsLoadingChars] = useState(false);
-    const [isLoadingChallenge, setIsLoadingChallenge] = useState(false);
+    const [isLoadingChars, setIsLoadingChars] = useState(true);
+    const [isLoadingDependencies, setIsLoadingDependencies] = useState(false);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
     
-
     useEffect(() => {
-        const loadCharacters = async () => {
+        let isMounted = true;
+        const loadInitialCharacters = async () => {
             setIsLoadingChars(true);
             setError(null);
             try {
                 const data = await api.getCharacters();
-                setCharacters(data);
+                if (isMounted) setCharacters(data);
             } catch (err) {
-                setError("Failed to load characters.");
-                console.error(err);
+                if (isMounted) setError(t("failedToLoadCharactersError"));
             } finally {
-                setIsLoadingChars(false);
+                if (isMounted) setIsLoadingChars(false);
             }
         };
-        loadCharacters();
-    }, []);
-
+        loadInitialCharacters();
+        return () => { isMounted = false; };
+    }, [t]);
+    
     useEffect(() => {
         if (!selectedCharacter) {
             setChallenges([]);
+            setEffectiveSelectedCharacter(null);
             return;
         }
 
-        const loadChallenges = async () => {
-            setIsLoadingChallenge(true);
+        let isMounted = true;
+        const loadDependencies = async () => {
+            setIsLoadingDependencies(true);
             setError(null);
-            setChallenges([]);
-            setSelectedChallenge(null);
-            setManagementDetails(null);
             try {
-                let data: Challenge[];
-                if (assignmentType === "available") {
-                    data = await api.getAvailableChallengesForCharacter(
-                        selectedCharacter.id,
-                    );
-                } else {
-                    data = await api.getAssignedChallengesForCharacter(
-                        selectedCharacter.id,
-                    );
-                }
-                setChallenges(data);
+                const [baseChar, tools, characterChallenges] = await Promise.all([
+                    api.getCharacterById(selectedCharacter.id),
+                    api.getAssignedToolsForCharacter(selectedCharacter.id),
+                    assignmentType === 'available'
+                        ? api.getAvailableChallengesForCharacter(selectedCharacter.id)
+                        : api.getAssignedChallengesForCharacter(selectedCharacter.id),
+                ]);
+
+                if (!isMounted) return;
+
+                let effectiveChar = { ...baseChar };
+                tools.forEach(tool => {
+                    TRAITS.forEach(trait => {
+                        const bonusKey = `${trait.property}Bonus` as keyof Tool;
+                        const statKey = trait.property as keyof Character;
+                        if (tool[bonusKey] != null) {
+                            (effectiveChar[statKey] as number) += (tool[bonusKey] as number);
+                        }
+                    });
+                });
+
+                setEffectiveSelectedCharacter(effectiveChar);
+                setChallenges(characterChallenges);
+
             } catch (err) {
-                setError(`Failed to load ${assignmentType} challenges.`);
-                console.error(err);
+                if (isMounted) setError(t("failedToLoadCharacterDataError"));
             } finally {
-                setIsLoadingChallenge(false);
+                if (isMounted) setIsLoadingDependencies(false);
             }
         };
 
-        loadChallenges();
-    }, [selectedCharacter, assignmentType]);
-
+        loadDependencies();
+        return () => { isMounted = false; };
+    }, [selectedCharacter, assignmentType, t]);
+    
     useEffect(() => {
         if (
             !selectedCharacter ||
             !selectedChallenge ||
-            assignmentType === "available"
+            assignmentType !== "assigned"
         ) {
             setManagementDetails(null);
             setDetailsText("");
@@ -103,141 +116,123 @@ function ManagementPage() {
             return;
         }
 
+        let isMounted = true;
         const loadDetails = async () => {
             setIsLoadingDetails(true);
-            setError(null);
             try {
-                const data = await api.getManagementDetails(
-                    selectedCharacter.id,
-                    selectedChallenge.id,
-                );
-                setManagementDetails(data);
-                setDetailsText(data.details || "");
-                setSelectedStateId(getStateId(data.state));
-            } catch (err) {
-                setError("Failed to load management details.");
-                console.error(err);
-                setManagementDetails(null);
-                setDetailsText("");
-                setSelectedStateId(1);
+                const data = await api.getManagementDetails(selectedCharacter.id, selectedChallenge.id);
+                if (isMounted) {
+                    setManagementDetails(data);
+                    setDetailsText(data.details || "");
+                    setSelectedStateId(getStateId(data.state));
+                    setError(null);
+                }
+            } catch (err: any) {
+                if (isMounted) {
+                    if (err.response?.status === 404) {
+                        console.log("Management details not found for this combo, which is expected during transition.");
+                    } else {
+                        setError(t("failedToLoadManagementDetailsError"));
+                    }
+                    setManagementDetails(null);
+                    setDetailsText("");
+                    setSelectedStateId(1);
+                }
             } finally {
-                setIsLoadingDetails(false);
+                if (isMounted) setIsLoadingDetails(false);
             }
         };
 
         loadDetails();
-    }, [selectedCharacter, selectedChallenge, assignmentType]);
+        return () => { isMounted = false; };
+    }, [selectedChallenge, selectedCharacter, assignmentType, t]);
 
-    const handleAssignmentTypeChange = (
-        event: ChangeEvent<HTMLSelectElement>,
-    ) => {
-        setAssignmentType(event.target.value as AssignmentType);
-    };
 
     const handleCharacterSelect = (event: ChangeEvent<HTMLSelectElement>) => {
+        setSelectedChallenge(null);
+        setManagementDetails(null);
+        setError(null);
         const charId = Number(event.target.value);
         setSelectedCharacter(characters.find((c) => c.id === charId) || null);
     };
 
-    const handleChallengeSelect = (event: ChangeEvent<HTMLSelectElement>) => {
-        const challengeId = Number(event.target.value);
-        setSelectedChallenge(
-            challenges.find((c) => c.id === challengeId) || null,
-        );
+    const handleAssignmentTypeChange = (event: ChangeEvent<HTMLSelectElement>) => {
+        setSelectedChallenge(null);
+        setManagementDetails(null);
+        setError(null);
+        setAssignmentType(event.target.value as AssignmentType);
     };
 
-    const checkStatSufficiency = (): string[] => {
+    const handleChallengeSelect = (event: ChangeEvent<HTMLSelectElement>) => {
+        const challengeId = Number(event.target.value);
+        setSelectedChallenge(challenges.find((c) => c.id === challengeId) || null);
+    };
+
+    const checkStatSufficiency = (characterForCheck: Character): string[] => {
         const insufficient: string[] = [];
-        if (!selectedCharacter || !selectedChallenge) return insufficient;
+        if (!characterForCheck || !selectedChallenge) return insufficient;
 
         TRAITS.forEach((trait) => {
-            const reqProp = `required${trait.title}` as keyof Challenge;
-            const charStat = selectedCharacter[
+            const reqProp = `required${capitalize(trait.property)}` as keyof Challenge;
+            const charStat = characterForCheck[
                 trait.property as keyof Character
-            ] as number;
+                ] as number;
             const requiredStat = selectedChallenge[reqProp] as
                 | number
                 | null
                 | undefined;
-
             if (requiredStat != null && charStat < requiredStat) {
-                insufficient.push(trait.title.toLowerCase());
+                insufficient.push(t(trait.property).toLowerCase());
             }
         });
         return insufficient;
     };
 
-    const handleAssign = async () => {
+    const handleAssign = useCallback(async () => {
         if (!selectedCharacter || !selectedChallenge) return;
-
-        const insufficientStats = checkStatSufficiency();
-        if (insufficientStats.length > 0) {
-            setError(
-                `Insufficient stats: ${insufficientStats.join(", ")}. Cannot assign challenge.`,
-            );
-            return;
-        }
-
         setIsSaving(true);
         setError(null);
         try {
+            const characterForCheck = effectiveSelectedCharacter || selectedCharacter;
+            const insufficientStats = checkStatSufficiency(characterForCheck);
+            if (insufficientStats.length > 0) {
+                setError(t("insufficientStatsError", 
+                    { stats : insufficientStats.join(", ") })
+                );
+                setIsSaving(false);
+                return;
+            }
             await api.assignChallenge({
                 characterId: selectedCharacter.id,
                 challengeId: selectedChallenge.id,
                 stateId: selectedStateId,
                 details: detailsText || null,
             });
-            alert("Challenge assigned successfully!");
+            alert(t("challengeAssignedSuccess"));
             setAssignmentType("assigned");
         } catch (err: any) {
-            console.error("Assign Error:", err);
-            let specificError = "Failed to assign challenge.";
-            if (axios.isAxiosError(err) && err.response) {
-                if (
-                    typeof err.response.data === "string" &&
-                    err.response.data.length > 0
-                ) {
-                    specificError = err.response.data;
-                } else if (
-                    err.response.data &&
-                    typeof err.response.data.message === "string"
-                ) {
-                    specificError = err.response.data.message;
-                }
-            } else if (err instanceof Error) {
-                specificError = err.message;
-            }
-            setError(specificError);
+            const message = err.response?.data?.message || err.response?.data || t("failedToAssignChallengeError");
+            setError(message);
         } finally {
             setIsSaving(false);
         }
-    };
+    }, [effectiveSelectedCharacter, selectedCharacter, selectedChallenge, selectedStateId, detailsText, t]);
+
     const handleUpdate = async () => {
         if (!selectedCharacter || !selectedChallenge) return;
         setIsSaving(true);
         setError(null);
         try {
-            await api.updateManagement(
-                selectedCharacter.id,
-                selectedChallenge.id,
-                {
-                    stateId: selectedStateId,
-                    details: detailsText || null,
-                },
-            );
-            setManagementDetails((prev) =>
-                prev
-                    ? {
-                          ...prev,
-                          state: getStateText(selectedStateId),
-                          details: detailsText || null,
-                      }
-                    : null,
-            );
-            alert("Management details updated!");
+            await api.updateManagement(selectedCharacter.id, selectedChallenge.id, {
+                stateId: selectedStateId,
+                details: detailsText || null,
+            });
+            setManagementDetails((prev) => prev ? { ...prev,
+                state: getStateText(selectedStateId),
+                details: detailsText || null } : null);
+            alert(t("managementUpdatedSuccess"));
         } catch (err) {
-            setError("Failed to update details.");
-            console.error(err);
+            setError(t("failedToUpdateDetailsError"));
         } finally {
             setIsSaving(false);
         }
@@ -245,56 +240,20 @@ function ManagementPage() {
 
     const handleClose = async () => {
         if (!selectedCharacter || !selectedChallenge) return;
-
         if (selectedStateId !== 3) {
-            setError(
-                'Challenge must be in "Completed" state to close and gain stats.',
-            );
+            setError(t("challengeMustBeCompletedError"));
             return;
         }
-
         setIsSaving(true);
         setError(null);
         try {
-            const updatedCharData = await api.closeChallenge(
-                selectedCharacter.id,
-                selectedChallenge.id,
-            );
-            alert("Challenge closed and stats updated!");
-
-            setSelectedCharacter(updatedCharData);
-            setCharacters((prev) =>
-                prev.map((c) =>
-                    c.id === updatedCharData.id ? updatedCharData : c,
-                ),
-            );
-
-            const updatedAssigned = await api.getAssignedChallengesForCharacter(
-                selectedCharacter.id,
-            );
-            setChallenges(updatedAssigned);
-            setSelectedChallenge(null);
-            setManagementDetails(null);
+            const updatedCharDataFromClose = await api.closeChallenge(selectedCharacter.id, selectedChallenge.id);
+            alert(t("challengeClosedSuccess"));
+            setCharacters((prev) => prev.map((c) => (c.id === updatedCharDataFromClose.id ? updatedCharDataFromClose : c)));
+            setSelectedCharacter(updatedCharDataFromClose);
         } catch (err: any) {
-            console.error("Close Error:", err);
-
-            let specificError = "Failed to close challenge.";
-            if (axios.isAxiosError(err) && err.response) {
-                if (
-                    typeof err.response.data === "string" &&
-                    err.response.data.length > 0
-                ) {
-                    specificError = err.response.data;
-                } else if (
-                    err.response.data &&
-                    typeof err.response.data.message === "string"
-                ) {
-                    specificError = err.response.data.message;
-                }
-            } else if (err instanceof Error) {
-                specificError = err.message;
-            }
-            setError(specificError);
+            const message = err.response?.data?.message || err.response?.data || t("failedToCloseChallengeError");
+            setError(message);
         } finally {
             setIsSaving(false);
         }
@@ -302,62 +261,55 @@ function ManagementPage() {
 
     const getActionButton = () => {
         if (!selectedCharacter || !selectedChallenge) return null;
-
         if (assignmentType === "available") {
-            return (
-                <button onClick={handleAssign} disabled={isSaving}>
-                    Kihívás felvétele
-                </button>
-            );
+            return <button onClick={handleAssign} disabled={isSaving || isLoadingDependencies}>{t('assignChallenge')}</button>;
         } else if (managementDetails && !managementDetails.isClosed) {
             return (
                 <>
                     <button
                         onClick={handleUpdate}
-                        disabled={isSaving || isLoadingDetails}
-                    >
-                        Frissítés
-                    </button>
-
+                        disabled={isSaving || isLoadingDetails}>{t('update')}</button>
+                    
                     {selectedStateId === 3 && (
                         <button
                             onClick={handleClose}
-                            disabled={isSaving || isLoadingDetails}
-                        >
-                            Lezárás
-                        </button>
-                    )}
+                            disabled={isSaving || isLoadingDetails}>{t('close')}</button>)}
                 </>
             );
-        }
-        return (
+        } else if (managementDetails && managementDetails.isClosed) {
+            return (
             <p>
-                <i>Challenge is closed.</i>
+                <i>{t('challengeIsClosed')}</i>
             </p>
-        );
+            );
+        }
+        return null;
     };
+
+    const charToDisplay = effectiveSelectedCharacter || selectedCharacter;
+    const isLoading = isLoadingChars || isLoadingDependencies;
 
     return (
         <div className="page-container management-page">
-            <h1>Vezetés/Fejlesztés</h1>
-
-            {isLoadingChars && <p>Loading characters...</p>}
+            <h1>{t('managementTitle')}</h1>
             {error && <p className="error-message">Error: {error}</p>}
 
             <div className="selectors-row">
                 <div className="assignment-type-selector evo-margin">
-                    <label>Válassz egy opciót:</label>
+                    <label htmlFor="assignmentTypeSelector">{t('selectAnOption')}:</label>
                     <select
+                        id="assignmentTypeSelector"
+                        name="assignmentTypeSelector"
                         className="evo-dropdown"
                         value={assignmentType}
                         onChange={handleAssignmentTypeChange}
-                        disabled={isSaving}
+                        disabled={isLoading || isSaving}
                     >
-                        <option value="available">Új kihívás felvétele</option>
-                        <option value="assigned">Kihívások kezelése</option>
+                        <option value="available">{t('assignNewChallenge')}</option>
+                        <option value="assigned">{t('manageChallenges')}</option>
                     </select>
                 </div>
-
+                
                 <CharacterSelector
                     characters={characters}
                     selectedId={selectedCharacter?.id ?? null}
@@ -366,128 +318,117 @@ function ManagementPage() {
                 />
 
                 {selectedCharacter && (
-                    <ChallengeSelector
-                        challenges={challenges}
-                        selectedId={selectedChallenge?.id ?? null}
-                        onChange={handleChallengeSelect}
-                        label={
-                            assignmentType === "available"
-                                ? "Felvehető kihivások:"
-                                : "Felvett kihívások:"
-                        }
-                        disabled={
-                            isLoadingChallenge || !selectedCharacter || isSaving
-                        }
-                    />
+                    <>
+                        {isLoadingDependencies ? <p>{t('loading')}...</p> : (
+                            <ChallengeSelector
+                                challenges={challenges}
+                                selectedId={selectedChallenge?.id ?? null}
+                                onChange={handleChallengeSelect}
+                                label={
+                                assignmentType === "available" 
+                                    ? t('availableChallengesLabel') 
+                                    : t('assignedChallengesLabel')
+                            }
+                                disabled={
+                                !selectedCharacter || isSaving}
+                            />
+                        )}
+                    </>
                 )}
-                {isLoadingChallenge && <p>Loading challenges...</p>}
             </div>
 
-            {selectedCharacter && selectedChallenge && (
+            {charToDisplay && selectedChallenge && (
                 <div className="details-action-row">
-                    {isLoadingDetails && <p>Loading details...</p>}
-
-                    <div className="character-summary">
-                        <h4>{selectedCharacter.name}</h4>
-                        {TRAITS.map((trait) => (
-                            <p key={trait.property}>
-                                {trait.title}:{" "}
-                                {
-                                    selectedCharacter[
-                                        trait.property as keyof Character
-                                    ]
+                    {isLoadingDetails ? <p>{t('loadingDetails')}</p> : (
+                        <>
+                            <div className="character-summary">
+                                <h4>{charToDisplay.name}
+                                    {effectiveSelectedCharacter && selectedCharacter && effectiveSelectedCharacter.id === selectedCharacter.id &&
+                                        TRAITS.some(trait => 
+                                            (effectiveSelectedCharacter[trait.property as keyof Character] as number) 
+                                            !== (selectedCharacter[trait.property as keyof Character] as number)) 
+                                        && " (eszközökkel)"}
+                                </h4>
+                                {TRAITS.map((trait) => (
+                                    <p key={trait.property}>{t(trait.property)}: {charToDisplay[trait.property as keyof Character]}
+                                    </p>
+                                ))}
+                            </div>
+                            <div className="challenge-summary">
+                                <h4>
+                                    {selectedChallenge.title}
+                                    {assignmentType === "available" ? ` ${t('requirements')}` : ` ${t('gainableValues')}`}
+                                </h4>
+                                {TRAITS.map((trait) => {
+                                    let valueToShow: number | null | undefined;
+                                    const capProperty = capitalize(trait.property);
+                                    
+                                    if (assignmentType === "available") {
+                                        valueToShow = selectedChallenge[`required${capProperty}` as keyof Challenge
+                                            ] as
+                                            number
+                                            | null
+                                            | undefined;
+                                    } else {
+                                        valueToShow = selectedChallenge[`gainable${capProperty}` as keyof Challenge
+                                            ] as
+                                            number
+                                            | null
+                                            | undefined;
+                                    }
+                                    if (valueToShow != null && valueToShow > 0) {
+                                        return (
+                                        <p key={trait.property}>{t(trait.property)}: {valueToShow}
+                                        </p>
+                                    );
+                                    } else {
+                                        return (
+                                        <p key={trait.property} style={{ opacity: 0.5 }}>{t(trait.property)}: {valueToShow ?? 0}
+                                        </p>
+                                    );
+                                    }
+                                })}
+                            </div>
+                            <div className="management-form">
+                                <h4>{t('details')}</h4>
+                                <label htmlFor="state">{t('state')}:</label>
+                                <select
+                                    className="evo-dropdown"
+                                        id="state"
+                                        value={selectedStateId}
+                                    onChange={(e) => setSelectedStateId(Number(e.target.value))}
+                                    disabled={
+                                    isSaving ||
+                                        isLoadingDetails ||
+                                        (managementDetails?.isClosed ?? false) ||
+                                        (assignmentType === "available" && !(charToDisplay && selectedChallenge))
+                                }>
+                                    {Object.entries(CHALLENGE_STATES).map(([id, text]) => (
+                                        <option key={id} value={id}>
+                                            {text}
+                                        </option>
+                                    ))}
+                                </select>
+                                
+                                <label htmlFor="details">{t('notes')}:</label>
+                                <textarea
+                                    className="management-details-container management-details"
+                                          id="details"
+                                          rows={4}
+                                          value={detailsText}
+                                          onChange={(e) => setDetailsText(e.target.value)}
+                                          placeholder={t('enterDetailsPlaceholder')} disabled={
+                                    isSaving ||
+                                    isLoadingDetails ||
+                                    (managementDetails?.isClosed ?? false)
                                 }
-                            </p>
-                        ))}
-                    </div>
-
-                    <div className="challenge-summary">
-                        <h4>
-                            {selectedChallenge.title}
-                            {assignmentType === "available"
-                                ? " követelményei"
-                                : " szerezhető értékei"}
-                        </h4>
-                        {TRAITS.map((trait) => {
-                            let valueToShow: number | null | undefined;
-
-                            if (assignmentType === "available") {
-                                const requiredPropName =
-                                    `required${capitalize(trait.property)}` as keyof Challenge;
-                                valueToShow = selectedChallenge[
-                                    requiredPropName
-                                ] as number | null | undefined;
-                            } else {
-                                const gainablePropName =
-                                    `gainable${capitalize(trait.property)}` as keyof Challenge;
-                                valueToShow = selectedChallenge[
-                                    gainablePropName
-                                ] as number | null | undefined;
-                            }
-
-                            if (valueToShow != null && valueToShow > 0) {
-                                return (
-                                    <p key={trait.property}>
-                                        {trait.title}: {valueToShow}
-                                    </p>
-                                );
-                            } else {
-                                return (
-                                    <p
-                                        key={trait.property}
-                                        style={{ opacity: 0.5 }}
-                                    >
-                                        {trait.title}: 0
-                                    </p>
-                                );
-                            }
-                        })}
-                    </div>
-
-                    <div className="management-form">
-                        <h4>Részletek</h4>
-                        <label htmlFor="state">Állapot:</label>
-                        <select
-                            className="evo-dropdown"
-                            id="state"
-                            value={selectedStateId}
-                            onChange={(e) =>
-                                setSelectedStateId(Number(e.target.value))
-                            }
-                            disabled={
-                                isSaving ||
-                                isLoadingDetails ||
-                                (managementDetails?.isClosed ?? false) ||
-                                assignmentType === "available"
-                            }
-                        >
-                            {Object.entries(CHALLENGE_STATES).map(
-                                ([id, text]) => (
-                                    <option key={id} value={id}>
-                                        {text}
-                                    </option>
-                                ),
-                            )}
-                        </select>
-
-                        <label htmlFor="details">Megjegyzések:</label>
-                        <textarea
-                            className="management-details-container management-details"
-                            id="details"
-                            rows={4}
-                            value={detailsText}
-                            onChange={(e) => setDetailsText(e.target.value)}
-                            placeholder="Enter details..."
-                            disabled={
-                                isSaving ||
-                                isLoadingDetails ||
-                                (managementDetails?.isClosed ?? false)
-                            }
-                        />
-                        <div className="action-buttons">
-                            {getActionButton()}
-                        </div>
-                    </div>
+                                />
+                                <div className="action-buttons">
+                                    {getActionButton()}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
         </div>

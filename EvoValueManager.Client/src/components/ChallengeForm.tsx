@@ -2,6 +2,7 @@
 import { Challenge } from "../interfaces/Challenge";
 import { TRAITS } from "../constants/traits";
 import { useTranslation } from "react-i18next";
+import { ErrorDictionary } from "../types/common";
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -11,6 +12,9 @@ interface ChallengeFormProps {
     onCancel?: () => void;
     isSaving: boolean;
 }
+
+type ChallengeStatKey = Exclude<keyof Omit<Challenge, "id" | "title">, undefined>;
+
 
 const defaultFormData: Omit<Challenge, "id"> = {
     title: "",
@@ -36,7 +40,7 @@ function ChallengeForm({
     const [formData, setFormData] = useState<Omit<Challenge, "id"> | Challenge>(
         initialData ? { ...initialData } : { ...defaultFormData },
     );
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [errors, setErrors] = useState<ErrorDictionary>({});
 
     useEffect(() => {
         setFormData(initialData ? { ...initialData } : { ...defaultFormData });
@@ -44,15 +48,30 @@ function ChallengeForm({
     }, [initialData]);
 
     const validate = (): boolean => {
-        const newErrors: { [key: string]: string } = {};
+        const newErrors: ErrorDictionary = {};
         if (!formData.title || formData.title.trim().length === 0) {
-            newErrors.title = "Title is required.";
+            newErrors.title = t("titleRequiredError");
         }
+
+        TRAITS.forEach(trait => {
+            const reqKey = `required${capitalize(trait.property)}` as ChallengeStatKey;
+            const gainKey = `gainable${capitalize(trait.property)}` as ChallengeStatKey;
+            const reqValue = formData[reqKey];
+            const gainValue = formData[gainKey];
+
+            if (reqValue != null && reqValue < 0) {
+                newErrors[reqKey] = t("valueCannotBeNegativeError", { trait: t(trait.property), type: t('required') });
+            }
+            if (gainValue != null && gainValue < 0) {
+                newErrors[gainKey] = t("valueCannotBeNegativeError", { trait: t(trait.property), type: t('gainable') });
+            }
+        });
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
 
         let processedValue: string | number | null = value;
@@ -76,26 +95,29 @@ function ChallengeForm({
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         if (validate()) {
-            onSubmit(formData);
+            if (initialData && initialData.id) {
+                onSubmit({ ...formData, id: initialData.id } as Challenge);
+            } else {
+                onSubmit(formData);
+            }
         }
     };
-
-    // @ts-ignore
+    
     const renderStatInput = (
         statType: "required" | "gainable",
         traitProperty: string,
-        traitTitle: string,
     ) => {
         const name = (`${statType}` +
-            capitalize(`${traitProperty}`)) as keyof Challenge;
-        const value = (formData as Challenge)[name] as
-            | number
-            | null
-            | undefined;
+            capitalize(traitProperty)) as ChallengeStatKey;
+        const value = formData[name];
 
         return (
             <div className="form-group form-group-stat" key={name}>
-                <label htmlFor={name}>{traitTitle}:</label>
+                <label htmlFor={name}>{t(traitProperty)} 
+                    ({statType === "required" 
+                        ? t('required') 
+                        : t('gainable')}):
+                </label>
                 <input
                     className="form-control"
                     type="number"
@@ -106,6 +128,7 @@ function ChallengeForm({
                     min="0"
                     placeholder="0"
                 />
+                {errors[name] && <span className="error-message">{errors[name]}</span>}
             </div>
         );
     };
@@ -113,7 +136,7 @@ function ChallengeForm({
     return (
         <form onSubmit={handleSubmit} className="challenge-form">
             <h3>
-                {initialData ? "Kihívás szerkesztése" : "Új kihivás hozzáadása"}
+                {initialData ? t("editChallenge") : t("addNewChallenge")}
             </h3>
 
             <div className="form-group">
@@ -135,46 +158,45 @@ function ChallengeForm({
             </div>
 
             <fieldset className="stats-fieldset">
-                <legend>Kötelező értékek</legend>
+                <legend>{t("requiredValues")}</legend>
                 <div className="stats-grid">
                     {TRAITS.map((trait) =>
                         renderStatInput(
                             "required",
                             trait.property,
-                            trait.title,
                         ),
                     )}
                 </div>
             </fieldset>
 
             <fieldset className="stats-fieldset">
-                <legend>Szerezhető értékek</legend>
+                <legend>{t("gainableValues")}</legend>
                 <div className="stats-grid">
                     {TRAITS.map((trait) =>
                         renderStatInput(
                             "gainable",
                             trait.property,
-                            trait.title,
                         ),
                     )}
                 </div>
             </fieldset>
 
             <div className="form-actions">
-                <button type="submit" disabled={isSaving}>
+                <button type="submit" disabled={isSaving} className="btn primary">
                     {isSaving
-                        ? "Saving..."
+                        ? t("saving")
                         : initialData
-                          ? "Változtatások mentése"
-                          : "Kihivás hozzáadása"}
+                            ? t("saveChanges")
+                            : t("addChallenge")}
                 </button>
                 {onCancel && (
                     <button
                         type="button"
                         onClick={onCancel}
                         disabled={isSaving}
+                        className="btn"
                     >
-                        Mégsem
+                        {t("cancel")}
                     </button>
                 )}
             </div>

@@ -3,8 +3,10 @@ import * as api from "../api/api";
 import { Challenge } from "../interfaces/Challenge";
 import ChallengeSelector from "../components/ChallengeSelector";
 import ChallengeForm from "../components/ChallengeForm";
+import { useTranslation } from "react-i18next";
 
 function ChallengePage() {
+    const { t } = useTranslation();
     const [challenges, setChallenges] = useState<Challenge[]>([]);
     const [selectedChallenge, setSelectedChallenge] =
         useState<Challenge | null>(null);
@@ -21,14 +23,14 @@ function ChallengePage() {
                 const data = await api.getChallenges();
                 setChallenges(data);
             } catch (err) {
-                setError("Failed to load challenges.");
+                setError(t("failedToLoadChallengesError"));
                 console.error(err);
             } finally {
                 setIsLoading(false);
             }
         };
         loadChallenges();
-    }, []);
+    }, [t]);
 
     const handleSelectChallenge = (event: ChangeEvent<HTMLSelectElement>) => {
         const selectedId = Number(event.target.value);
@@ -43,31 +45,27 @@ function ChallengePage() {
     };
 
     const handleFormSubmit = async (
-        challengeData: Omit<Challenge, "id"> | Challenge,
-    ) => {
+        challengeData: Omit<Challenge, "id"> | Challenge) => {
         setIsSaving(true);
         setError(null);
         try {
-            if ("id" in challengeData) {
-                await api.updateChallenge(challengeData.id, challengeData);
+            if ("id" in challengeData && challengeData.id) {
+                const updated = challengeData as Challenge;
+                await api.updateChallenge(updated.id, updated);
                 setChallenges((prev) =>
-                    prev.map((c) =>
-                        c.id === challengeData.id ? challengeData : c,
-                    ),
+                    prev.map((c) => (c.id === updated.id ? updated : c))
                 );
-                setSelectedChallenge(challengeData);
-                alert("Challenge updated!");
+                setSelectedChallenge(updated);
+                alert(t("challengeUpdatedAlert"));
             } else {
                 const newChallenge = await api.createChallenge(challengeData);
                 setChallenges((prev) => [...prev, newChallenge]);
                 setShowAddForm(false);
-                alert("Challenge added!");
+                setSelectedChallenge(newChallenge);
+                alert(t("challengeAddedAlert"));
             }
         } catch (err: any) {
-            const message =
-                err.response?.data?.message ||
-                err.response?.data ||
-                "Failed to save challenge.";
+            const message = err.response?.data?.message || err.response?.data || t("failedToSaveChangesError");
             setError(message);
             console.error(err);
         } finally {
@@ -75,38 +73,39 @@ function ChallengePage() {
         }
     };
 
-    if (isLoading) return <p>Loading challenges...</p>;
+    if (isLoading) return <p>{t("loadingChallenges")}</p>;
 
     return (
         <div className="page-container">
-            <h1>Kihívások</h1>
+            <h1>{t("challengesTitle")}</h1>
             {error && !isSaving && (
-                <p className="error-message">Error loading page: {error}</p>
+                <p className="error-message">{t("errorLoadingPage")}: {error}</p>
             )}
 
             <ChallengeSelector
                 challenges={challenges}
                 selectedId={selectedChallenge?.id ?? null}
                 onChange={handleSelectChallenge}
+                label={t("selectChallengeLabel")}
                 disabled={isLoading || isSaving}
             />
 
             <button
                 onClick={toggleAddChallengeForm}
                 disabled={isLoading || isSaving}
-                className="evo-margin"
+                className="evo-margin btn"
             >
-                {showAddForm ? "Vissza" : "Új kihívás felvétele"}
+                {showAddForm ? t("back") : t("addNewChallengeButton")}
             </button>
 
-            {error && isSaving && <p className="error-message">{error}</p>}
+            {error && isSaving && <p className="error-message">{t("errorSavingForm")}: {error}</p>}
 
             {(showAddForm || (selectedChallenge && !showAddForm)) && (
                 <ChallengeForm
-                    key={selectedChallenge?.id ?? "new"}
+                    key={selectedChallenge?.id ?? "new-challenge-form"}
                     initialData={showAddForm ? null : selectedChallenge}
                     onSubmit={handleFormSubmit}
-                    onCancel={showAddForm ? toggleAddChallengeForm : undefined}
+                    onCancel={showAddForm ? toggleAddChallengeForm : () => setSelectedChallenge(null)}
                     isSaving={isSaving}
                 />
             )}

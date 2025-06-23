@@ -3,7 +3,6 @@ using EvoCharacterManager.Data;
 using EvoCharacterManager.Helpers;
 using EvoCharacterManager.Services;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.AspNetCore.SpaProxy;
 
 namespace EvoCharacterManager
 {
@@ -42,6 +41,8 @@ namespace EvoCharacterManager
             builder.Services.AddTransient<ICharacterService, CharacterService>();
             builder.Services.AddTransient<IChallengeService, ChallengeService>();
             builder.Services.AddTransient<IManagementService, ManagementService>();
+            builder.Services.AddTransient<IToolService, ToolService>();
+            builder.Services.AddTransient<ICharacterToolService, CharacterToolService>();
             builder.Services.AddTransient<DatabaseSeeder>();
             builder.Services.AddTransient<NameGenerator>();
         }

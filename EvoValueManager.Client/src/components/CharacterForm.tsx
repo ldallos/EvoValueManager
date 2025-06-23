@@ -2,6 +2,7 @@
 import { Character } from "../interfaces/Character";
 import { TRAITS } from "../constants/traits";
 import { useTranslation } from "react-i18next";
+import { ErrorDictionary } from "../types/common";
 
 interface CharacterFormProps {
     initialData?: Character | null;
@@ -12,7 +13,7 @@ interface CharacterFormProps {
 
 type CharacterFormData = Omit<Character, "id">;
 
-const defaultFormData: Omit<Character, "id"> = {
+const defaultFormData: CharacterFormData = {
     name: "",
     bravery: 1,
     trust: 1,
@@ -35,25 +36,35 @@ function CharacterForm({
         }
         return { ...defaultFormData };
     });
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [errors, setErrors] = useState<ErrorDictionary>({});
 
     useEffect(() => {
-        setFormData(initialData ? { ...initialData } : { ...defaultFormData });
+        if (initialData) {
+            const { id, ...rest } = initialData;
+            setFormData(rest);
+        } else {
+            setFormData({ ...defaultFormData });
+        }
         setErrors({});
     }, [initialData]);
 
     const validate = (): boolean => {
-        const newErrors: { [key: string]: string } = {};
-        if (!formData.name || formData.name.length < 3) {
-            newErrors.name = "Name must be at least 3 characters long.";
+        const newErrors: ErrorDictionary = {};
+        if (!formData.name || formData.name.trim().length < 3) {
+            newErrors.name = t("characterNameMinLengthError");
         }
         TRAITS.forEach((trait) => {
             const value = formData[
                 trait.property as keyof CharacterFormData
-            ] as number;
-            if (value < 1 || value > 100) {
-                newErrors[trait.property] =
-                    `${trait.title} must be between 1 and 100.`;
+                ];
+            if (typeof value === 'number' 
+                && (value < 1 || value > 100)) 
+            {
+                newErrors[trait.property] = t("traitValueError", 
+                    { trait: t(trait.property) });
+            } else if (typeof value !== 'number') {
+                newErrors[trait.property] = t("traitValueNumberError", 
+                    { trait: t(trait.property) });
             }
         });
         setErrors(newErrors);
@@ -66,7 +77,7 @@ function CharacterForm({
         const { name, value, type } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: type === "number" ? parseInt(value, 10) || 0 : value,
+            [name]: type === "number" ? (value === "" ? 0 : parseInt(value, 10)) || 0 : value,
         }));
         if (errors[name]) {
             setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -76,14 +87,18 @@ function CharacterForm({
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         if (validate()) {
-            onSubmit(formData);
+            if (initialData && initialData.id) {
+                onSubmit({ ...formData, id: initialData.id });
+            } else {
+                onSubmit(formData);
+            }
         }
     };
 
     return (
         <form onSubmit={handleSubmit} className="character-form">
             <h3>
-                {initialData ? "Csapattag módosítása" : "Csapattag felvétele"}
+                {initialData ? t("editCharacter") : t("addNewCharacter")}
             </h3>
 
             <div className="form-group">
@@ -95,6 +110,7 @@ function CharacterForm({
                     className="form-control"
                     value={formData.name}
                     onChange={handleChange}
+                    minLength={3}
                     maxLength={50}
                     required
                 />
@@ -105,7 +121,7 @@ function CharacterForm({
 
             {TRAITS.map((trait) => (
                 <div className="form-group" key={trait.property}>
-                    <label htmlFor={trait.property}>{trait.title}:</label>
+                    <label htmlFor={trait.property}>{t(trait.property)}:</label>
                     <input
                         type="number"
                         id={trait.property}
@@ -134,10 +150,10 @@ function CharacterForm({
                     className="btn primary"
                 >
                     {isSaving
-                        ? "Saving..."
+                        ? t("saving")
                         : initialData
-                          ? "Változtatások mentése"
-                          : "Karakter felvétele"}
+                            ? t("saveChanges")
+                            : t("addCharacter")}
                 </button>
                 {onCancel && (
                     <button
@@ -146,7 +162,7 @@ function CharacterForm({
                         disabled={isSaving}
                         className="btn"
                     >
-                        Mégsem
+                        {t("cancel")}
                     </button>
                 )}
             </div>
