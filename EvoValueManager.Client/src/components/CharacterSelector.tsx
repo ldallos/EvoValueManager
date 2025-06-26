@@ -1,5 +1,7 @@
 ﻿import { ChangeEvent } from "react";
 import { Character } from "../interfaces/Character.ts";
+import Select from "./ui/Select";
+import { useTranslation } from "react-i18next";
 
 interface CharacterSelectorProps {
     characters: Character[];
@@ -13,31 +15,29 @@ function CharacterSelector({
     characters,
     selectedId,
     onChange,
-    label = "Csapattag kiválasztása:",
+    label,
     disabled = false,
 }: CharacterSelectorProps) {
-    const selectorId = "character-selector";
+    const { t } = useTranslation();
+    const displayLabel = label || t("characterSelect");
+
     return (
-        <div className="evo-margin evo-flex">
-            <label htmlFor={selectorId} className="evo-character-label">{label}</label>
-            <select
-                id={selectorId}
-                name={selectorId}
-                className="evo-dropdown"
-                onChange={onChange}
-                value={selectedId ?? ""}
-                disabled={disabled || characters.length === 0}
-            >
-                <option value="" disabled>
-                    Válassz egy csapattagot
+        <Select
+            label={displayLabel}
+            name="character-selector"
+            onChange={onChange}
+            value={selectedId ?? ""}
+            disabled={disabled || characters.length === 0}
+        >
+            <option value="" disabled>
+                {t("selectACharacter")}
+            </option>
+            {characters.map((char) => (
+                <option key={char.id} value={char.id}>
+                    {char.name}
                 </option>
-                {characters.map((char) => (
-                    <option key={char.id} value={char.id}>
-                        {char.name}
-                    </option>
-                ))}
-            </select>
-        </div>
+            ))}
+        </Select>
     );
 }
 

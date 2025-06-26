@@ -1,181 +1,100 @@
-﻿import {useState, useEffect, ChangeEvent, useCallback} from "react";
+﻿import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { User, PlusCircle } from "lucide-react";
 import * as api from "../api/api";
-import {Character} from "../interfaces/Character";
-import {Tool} from "../interfaces/Tool.ts";
-import CharacterSelector from "../components/CharacterSelector";
-import CharacterForm from "../components/CharacterForm";
-import {TRAITS} from "../constants/traits.ts";
-import {useTranslation} from "react-i18next";
+import { Character } from "../interfaces/Character";
+import CharacterGrid from "../components/CharacterGrid";
+import CharacterDashboard from "../components/CharacterDashboard";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
 
 function CharacterPage() {
-    const { t } = useTranslation();
-    const [characters, setCharacters] = useState<Character[]>([]);
-    const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
-    const [assignedTools, setAssignedTools] = useState<Tool[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingTools, setIsLoadingTools] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [showAddForm, setShowAddForm] = useState(false);
+    const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
 
-    useEffect(() => {
-        const loadCharacters = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const data = await api.getCharacters();
-                setCharacters(data);
-            } catch (err) {
-                setError(t("failedToLoadCharactersError"));
-                console.error(err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        loadCharacters();
-    }, [t]);
+    const {
+        data: characters = [],
+        isLoading,
+        error,
+    } = useQuery<Character[], Error>({
+        queryKey: ["characters"],
+        queryFn: api.getCharacters,
+        staleTime: 1000 * 60 * 5,
+    });
 
-    useEffect(() => {
-        if (!selectedCharacter) {
-            setAssignedTools([]);
-            return;
-        }
-
-        const loadAssignedToolsForCharacter = async () => {
-            setIsLoadingTools(true);
-            try {
-                const toolsData = await api.getAssignedToolsForCharacter(selectedCharacter.id);
-                setAssignedTools(toolsData);
-            } catch (err) {
-                console.error("Failed to load assigned tools for character:", err);
-                setError(prev => prev || t("failedToLoadAssignedToolsError"));
-                setAssignedTools([]);
-            } finally {
-                setIsLoadingTools(false);
-            }
-        };
-
-        loadAssignedToolsForCharacter();
-    }, [selectedCharacter, t]);
-
-    const handleSelectCharacter = (event: ChangeEvent<HTMLSelectElement>) => {
-        const selectedId = Number(event.target.value);
-        const char = characters.find((c) => c.id === selectedId) || null;
-        setSelectedCharacter(char);
-        setShowAddForm(false);
-        setError(null);
+    const handleSelectCharacter = (id: number) => {
+        setSelectedCharacterId((prevId) => (prevId === id ? null : id));
     };
 
-    const toggleAddCharacterForm = () => {
-        setShowAddForm((prev) => !prev);
-        setSelectedCharacter(null);
-        setError(null);
-    };
-
-    const handleFormSubmit = useCallback(async (
-        characterPayload: Omit<Character, "id"> | Character,
-    ) => {
-        setIsSaving(true);
-        setError(null);
-        try {
-            if ("id" in characterPayload && characterPayload.id) {
-                const charToUpdate = characterPayload as Character;
-                await api.updateCharacter(charToUpdate.id, charToUpdate);
-                const updatedList = characters.map((c) => (c.id === charToUpdate.id ? charToUpdate : c));
-                setCharacters(updatedList);
-                setSelectedCharacter(charToUpdate);
-                alert(t("characterUpdatedAlert"));
-            } else {
-                const newCharacter = await api.createCharacter(characterPayload as Omit<Character, "id">);
-                setCharacters((prev) => [...prev, newCharacter]);
-                setShowAddForm(false);
-                setSelectedCharacter(newCharacter);
-                alert(t("characterAddedAlert"));
-            }
-        } catch (err: any) {
-            const message = err.response?.data?.message || err.response?.data || t("failedToSaveChangesError");
-            setError(message);
-            console.error(err);
-        } finally {
-            setIsSaving(false);
-        }
-    }, [t, characters]);
-
-    const calculateTotalBonus = (traitProperty: keyof Tool): number => {
-        return assignedTools.reduce((sum, tool) => {
-            const bonus = tool[traitProperty];
-            return sum + (typeof bonus === 'number' ? bonus : 0);
-        }, 0);
+    if (error) {
+        return (
+            <div className="text-center text-red-400 p-10">
+                Error loading characters: {error.message}
+            </div>
+        );
     }
 
-    if (isLoading) return <p>{t("loadingCharacters")}</p>;
-
     return (
-        <div className="page-container">
-            <h1>{t("charactersTitle")}</h1>
-            {error && !isSaving && <p className="error-message">{t("errorLoadingPage")}: {error}</p>}
+        <div className="bg-slate-900 text-slate-200 font-sans -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8 min-h-screen">
+            <div className="max-w-screen-2xl mx-auto">
+                <header className="mb-8">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-white">
+                        Characters
+                    </h1>
+                    <p className="text-slate-400 mt-2">
+                        Select a character
+                    </p>
+                </header>
 
-            <CharacterSelector
-                characters={characters}
-                selectedId={selectedCharacter?.id ?? null}
-                onChange={handleSelectCharacter}
-                label={t("selectCharacterLabel")}
-                disabled={isLoading || isSaving}
-            />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div className="lg:col-span-5 xl:col-span-4">
+                        {!isLoading && characters.length === 0 ? (
+                            <Card className="p-10 flex flex-col items-center justify-center text-center h-full min-h-[600px]">
+                                <h3 className="text-xl font-semibold text-white">
+                                    No Characters Found
+                                </h3>
+                                <p className="text-slate-400 mt-1">
+                                    Get started by creating a new character.
+                                </p>
+                                <Button
+                                    variant="primary"
+                                    className="mt-4"
+                                    onClick={() => {
+                                    }}
+                                >
+                                    <PlusCircle className="w-5 h-5 mr-2" />
+                                    Create Character
+                                </Button>
+                            </Card>
+                        ) : (
+                            <CharacterGrid
+                                characters={characters}
+                                isLoading={isLoading}
+                                selectedCharacterId={selectedCharacterId}
+                                onCharacterSelect={handleSelectCharacter}
+                            />
+                        )}
+                    </div>
 
-            <button onClick={toggleAddCharacterForm} disabled={isLoading || isSaving} className="evo-margin btn">
-                {showAddForm ? t("back") : t("addNewCharacterButton")}
-            </button>
-
-            {error && isSaving && <p className="error-message">{t("errorSavingForm")}: {error}</p>}
-
-            {showAddForm && (
-                <CharacterForm
-                    key={"new-character-form"}
-                    initialData={null}
-                    onSubmit={handleFormSubmit}
-                    onCancel={toggleAddCharacterForm}
-                    isSaving={isSaving}
-                />
-            )}
-
-            {!showAddForm && selectedCharacter && (
-                <>
-                    <CharacterForm
-                        key={selectedCharacter.id}
-                        initialData={selectedCharacter}
-                        onSubmit={handleFormSubmit}
-                        onCancel={() => setSelectedCharacter(null)}
-                        isSaving={isSaving}
-                    />
-                    {isLoadingTools ? <p>{t("loadingToolsForCharacter")}</p> : (
-                        <div className="character-details evo-details-margin">
-                            <h3>{t("statsTitleEffective")}</h3>
-                            {TRAITS.map(trait => {
-                                const baseStat = selectedCharacter[trait.property as keyof Character] as number;
-                                const bonus = calculateTotalBonus((`${trait.property}Bonus`) as keyof Tool);
-                                const effectiveStat = baseStat + bonus;
-                                return (
-                                    <p key={trait.property}>
-                                        {t(trait.property)}: {baseStat}
-                                        {bonus !== 0 && ` (${bonus > 0 ? '+' : ''}${bonus} = ${effectiveStat})`}
-                                    </p>
-                                );
-                            })}
-                            <div className="assigned-tools-section evo-margin">
-                                <h4>{t("assignedToolsTitle")}:</h4>
-                                {assignedTools.length > 0 ? (
-                                    <ul>
-                                        {assignedTools.map(tool => <li key={tool.id}>{tool.name}</li>)}
-                                    </ul>
-                                ) : (
-                                    <p>{t("noToolsAssignedToCharacter")}</p>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </>
-            )}
+                    <div className="lg:col-span-7 xl:col-span-8">
+                        {selectedCharacterId ? (
+                            <CharacterDashboard
+                                key={selectedCharacterId}
+                                characterId={selectedCharacterId}
+                            />
+                        ) : (
+                            <Card className="p-10 flex flex-col items-center justify-center text-center h-full min-h-[600px] border-2 border-dashed border-slate-700 bg-slate-800/30">
+                                <User className="w-16 h-16 text-slate-500 mb-4" />
+                                <h3 className="text-2xl font-semibold text-white">
+                                    Select a Character
+                                </h3>
+                                <p className="text-slate-400 mt-2 max-w-sm">
+                                    Select a character
+                                </p>
+                            </Card>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

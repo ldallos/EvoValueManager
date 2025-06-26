@@ -1,174 +1,103 @@
-﻿import { useState, useEffect, FormEvent, ChangeEvent } from "react";
+﻿import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Tool } from "../interfaces/Tool";
 import { TRAITS } from "../constants/traits";
 import { useTranslation } from "react-i18next";
-import { ErrorDictionary } from "../types/common";
+import Button from "./ui/Button";
+import Input from "./ui/Input";
+
+const toolSchema = z.object({
+    name: z.string().min(1, "Tool name is required."),
+    description: z.string().max(500, "Description is too long.").optional().nullable(),
+    braveryBonus: z.coerce.number().min(0, "Bonus must be positive.").optional().nullable(),
+    trustBonus: z.coerce.number().min(0, "Bonus must be positive.").optional().nullable(),
+    presenceBonus: z.coerce.number().min(0, "Bonus must be positive.").optional().nullable(),
+    growthBonus: z.coerce.number().min(0, "Bonus must be positive.").optional().nullable(),
+    careBonus: z.coerce.number().min(0, "Bonus must be positive.").optional().nullable(),
+});
+
+type ToolFormData = z.infer<typeof toolSchema>;
 
 interface ToolFormProps {
     initialData?: Tool | null;
-    onSubmit: (toolData: Omit<Tool, "id"> | Tool) => void;
+    onSubmit: (data: ToolFormData & { id?: number }) => void;
     onCancel?: () => void;
     isSaving: boolean;
 }
 
-type ToolStatKey = Exclude<keyof Omit<Tool, "id" | "name" | "description">, undefined>;
-
-
-const defaultFormData: Omit<Tool, "id"> = {
-    name: "",
-    description: "",
-    braveryBonus: null,
-    trustBonus: null,
-    presenceBonus: null,
-    growthBonus: null,
-    careBonus: null,
-};
-
-function ToolForm({
-                      initialData,
-                      onSubmit,
-                      onCancel,
-                      isSaving,
-                  }: ToolFormProps) {
+function ToolForm({ initialData, onSubmit, onCancel, isSaving }: ToolFormProps) {
     const { t } = useTranslation();
-    const [formData, setFormData] = useState<Omit<Tool, "id"> | Tool>(
-        initialData ? { ...initialData } : { ...defaultFormData },
-    );
-    const [errors, setErrors] = useState<ErrorDictionary>({});
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+    } = useForm<ToolFormData>({
+        resolver: zodResolver(toolSchema),
+        defaultValues: initialData || {},
+    });
 
     useEffect(() => {
-        setFormData(initialData ? { ...initialData } : { ...defaultFormData });
-        setErrors({});
-    }, [initialData]);
+        reset(initialData || {});
+    }, [initialData, reset]);
 
-    const validate = (): boolean => {
-        const newErrors: ErrorDictionary = {};
-        if (!formData.name || formData.name.trim().length === 0) {
-            newErrors.name = t("toolNameRequiredError");
-        }
-
-        TRAITS.forEach(trait => {
-            const bonusValueKey = `${trait.property}Bonus` as ToolStatKey;
-            const bonusValue = formData[bonusValueKey];
-
-            if (bonusValue != null && bonusValue < 0) {
-                newErrors[bonusValueKey] = t("bonusNonNegativeError", { trait: t(trait.property) });
-            }
-        });
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value, type } = e.target;
-
-        let processedValue: string | number | null = value;
-        if (type === "number") {
-            processedValue = value === "" ? null : parseInt(value, 10);
-            if (isNaN(processedValue as number)) {
-                processedValue = null;
-            }
-        }
-
-        setFormData((prev) => ({
-            ...prev,
-            [name]: processedValue,
-        }));
-
-        if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: "" }));
-        }
-    };
-
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
-        if (validate()) {
-            if (initialData && initialData.id) {
-                onSubmit({ ...formData, id: initialData.id } as Tool);
-            } else {
-                onSubmit(formData);
-            }
-        }
-    };
-    
-    const renderBonusInput = (traitProperty: string) => {
-        const name = `${traitProperty}Bonus` as ToolStatKey;
-        const value = formData[name];
-
-        return (
-            <div className="form-group form-group-stat" key={name}>
-                <label htmlFor={name}>{t(traitProperty)} {t("bonus")}:</label>
-                <input
-                    className="form-control"
-                    type="number"
-                    id={name}
-                    name={name}
-                    value={value ?? ""}
-                    onChange={handleChange}
-                    min="0"
-                    placeholder="0"
-                />
-                {errors[name] && <span className="error-message">{errors[name]}</span>}
-            </div>
-        );
+    const handleFormSubmit = (data: ToolFormData) => {
+        onSubmit({ ...data, id: initialData?.id });
     };
 
     return (
-        <form onSubmit={handleSubmit} className="challenge-form">
-            <h3>{initialData ? t("toolEdit") : t("toolAdd")}</h3>
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+            <h3 className="text-xl font-semibold text-gray-900">
+                {initialData ? t("toolEdit") : t("toolAdd")}
+            </h3>
 
-            <div className="form-group">
-                <label htmlFor="name">{t("toolIdentifier")}:</label>
-                <input
-                    className="form-control"
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    minLength={1}
-                    maxLength={100}
-                    required
-                />
-                {errors.name && <span className="error-message">{errors.name}</span>}
-            </div>
+            <Input label={t("toolIdentifier")} error={errors.name} {...register("name")} />
 
-            <div className="form-group">
-                <label htmlFor="description">{t("description")}:</label>
+            <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                    {t("description")}:
+                </label>
                 <textarea
-                    className="form-control"
                     id="description"
-                    name="description"
-                    value={formData.description ?? ""}
-                    onChange={handleChange}
                     rows={3}
-                    maxLength={500}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-evogreen focus:border-evogreen sm:text-sm"
+                    {...register("description")}
                 />
-                {errors.description && <span className="error-message">{errors.description}</span>}
             </div>
 
-            <fieldset className="stats-fieldset">
-                <legend>{t("valueBonuses")}</legend>
-                <div className="stats-grid">
-                    {TRAITS.map((trait) =>
-                        renderBonusInput(trait.property),
-                    )}
+            <fieldset>
+                <legend className="text-lg font-medium text-gray-900">{t("valueBonuses")}</legend>
+                <div className="mt-4 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {TRAITS.map((trait) => (
+                        <Input
+                            key={trait.property}
+                            label={`${t(trait.property)} ${t("bonus")}`}
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            error={errors[`${trait.property}Bonus` as keyof ToolFormData]}
+                            {...register(`${trait.property}Bonus` as keyof ToolFormData)}
+                        />
+                    ))}
                 </div>
             </fieldset>
 
-            <div className="form-actions">
-                <button type="submit" disabled={isSaving} className="btn primary">
-                    {isSaving
-                        ? t("saving")
-                        : initialData
-                            ? t("saveChanges")
-                            : t("toolAddButton")}
-                </button>
+            <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
+                <Button
+                    type="submit"
+                    variant="primary"
+                    isLoading={isSaving}
+                    loadingText={t("saving")}
+                >
+                    {initialData ? t("saveChanges") : t("toolAddButton")}
+                </Button>
                 {onCancel && (
-                    <button type="button" onClick={onCancel} disabled={isSaving} className="btn">
+                    <Button type="button" onClick={onCancel} disabled={isSaving}>
                         {t("cancel")}
-                    </button>
+                    </Button>
                 )}
             </div>
         </form>

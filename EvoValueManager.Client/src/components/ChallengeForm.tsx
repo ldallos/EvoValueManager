@@ -15,7 +15,6 @@ interface ChallengeFormProps {
 
 type ChallengeStatKey = Exclude<keyof Omit<Challenge, "id" | "title">, undefined>;
 
-
 const defaultFormData: Omit<Challenge, "id"> = {
     title: "",
     requiredBravery: null,
@@ -30,15 +29,10 @@ const defaultFormData: Omit<Challenge, "id"> = {
     gainableCare: null,
 };
 
-function ChallengeForm({
-    initialData,
-    onSubmit,
-    onCancel,
-    isSaving,
-}: ChallengeFormProps) {
+function ChallengeForm({ initialData, onSubmit, onCancel, isSaving }: ChallengeFormProps) {
     const { t } = useTranslation();
     const [formData, setFormData] = useState<Omit<Challenge, "id"> | Challenge>(
-        initialData ? { ...initialData } : { ...defaultFormData },
+        initialData ? { ...initialData } : { ...defaultFormData }
     );
     const [errors, setErrors] = useState<ErrorDictionary>({});
 
@@ -53,17 +47,23 @@ function ChallengeForm({
             newErrors.title = t("titleRequiredError");
         }
 
-        TRAITS.forEach(trait => {
+        TRAITS.forEach((trait) => {
             const reqKey = `required${capitalize(trait.property)}` as ChallengeStatKey;
             const gainKey = `gainable${capitalize(trait.property)}` as ChallengeStatKey;
             const reqValue = formData[reqKey];
             const gainValue = formData[gainKey];
 
             if (reqValue != null && reqValue < 0) {
-                newErrors[reqKey] = t("valueCannotBeNegativeError", { trait: t(trait.property), type: t('required') });
+                newErrors[reqKey] = t("valueCannotBeNegativeError", {
+                    trait: t(trait.property),
+                    type: t("required"),
+                });
             }
             if (gainValue != null && gainValue < 0) {
-                newErrors[gainKey] = t("valueCannotBeNegativeError", { trait: t(trait.property), type: t('gainable') });
+                newErrors[gainKey] = t("valueCannotBeNegativeError", {
+                    trait: t(trait.property),
+                    type: t("gainable"),
+                });
             }
         });
 
@@ -102,21 +102,15 @@ function ChallengeForm({
             }
         }
     };
-    
-    const renderStatInput = (
-        statType: "required" | "gainable",
-        traitProperty: string,
-    ) => {
-        const name = (`${statType}` +
-            capitalize(traitProperty)) as ChallengeStatKey;
+
+    const renderStatInput = (statType: "required" | "gainable", traitProperty: string) => {
+        const name = (`${statType}` + capitalize(traitProperty)) as ChallengeStatKey;
         const value = formData[name];
 
         return (
             <div className="form-group form-group-stat" key={name}>
-                <label htmlFor={name}>{t(traitProperty)} 
-                    ({statType === "required" 
-                        ? t('required') 
-                        : t('gainable')}):
+                <label htmlFor={name}>
+                    {t(traitProperty)}({statType === "required" ? t("required") : t("gainable")}):
                 </label>
                 <input
                     className="form-control"
@@ -135,9 +129,7 @@ function ChallengeForm({
 
     return (
         <form onSubmit={handleSubmit} className="challenge-form">
-            <h3>
-                {initialData ? t("editChallenge") : t("addNewChallenge")}
-            </h3>
+            <h3>{initialData ? t("editChallenge") : t("addNewChallenge")}</h3>
 
             <div className="form-group">
                 <label htmlFor="title">{t("challengeName")}</label>
@@ -152,50 +144,29 @@ function ChallengeForm({
                     maxLength={100}
                     required
                 />
-                {errors.title && (
-                    <span className="error-message">{errors.title}</span>
-                )}
+                {errors.title && <span className="error-message">{errors.title}</span>}
             </div>
 
             <fieldset className="stats-fieldset">
                 <legend>{t("requiredValues")}</legend>
                 <div className="stats-grid">
-                    {TRAITS.map((trait) =>
-                        renderStatInput(
-                            "required",
-                            trait.property,
-                        ),
-                    )}
+                    {TRAITS.map((trait) => renderStatInput("required", trait.property))}
                 </div>
             </fieldset>
 
             <fieldset className="stats-fieldset">
                 <legend>{t("gainableValues")}</legend>
                 <div className="stats-grid">
-                    {TRAITS.map((trait) =>
-                        renderStatInput(
-                            "gainable",
-                            trait.property,
-                        ),
-                    )}
+                    {TRAITS.map((trait) => renderStatInput("gainable", trait.property))}
                 </div>
             </fieldset>
 
             <div className="form-actions">
                 <button type="submit" disabled={isSaving} className="btn primary">
-                    {isSaving
-                        ? t("saving")
-                        : initialData
-                            ? t("saveChanges")
-                            : t("addChallenge")}
+                    {isSaving ? t("saving") : initialData ? t("saveChanges") : t("addChallenge")}
                 </button>
                 {onCancel && (
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        disabled={isSaving}
-                        className="btn"
-                    >
+                    <button type="button" onClick={onCancel} disabled={isSaving} className="btn">
                         {t("cancel")}
                     </button>
                 )}

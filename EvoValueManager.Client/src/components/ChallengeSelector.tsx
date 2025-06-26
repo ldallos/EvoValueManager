@@ -1,5 +1,7 @@
 ﻿import { ChangeEvent } from "react";
 import { Challenge } from "../interfaces/Challenge";
+import Select from "./ui/Select";
+import { useTranslation } from "react-i18next";
 
 interface ChallengeSelectorProps {
     challenges: Challenge[];
@@ -13,31 +15,29 @@ function ChallengeSelector({
     challenges,
     selectedId,
     onChange,
-    label = "Kihivás kiválasztása:",
+    label,
     disabled = false,
 }: ChallengeSelectorProps) {
-    const selectorId = "challenge-selector";
+    const { t } = useTranslation();
+    const displayLabel = label || t("challengeSelect");
+
     return (
-        <div className="evo-margin evo-flex">
-            <label htmlFor={selectorId} className="evo-challenge-label">{label}</label>
-            <select
-                id={selectorId}
-                name={selectorId}
-                className="evo-dropdown evo-margin"
-                onChange={onChange}
-                value={selectedId ?? ""}
-                disabled={disabled || challenges.length === 0}
-            >
-                <option value="" disabled>
-                    Válassz egy kihívást
+        <Select
+            label={displayLabel}
+            name="challenge-selector"
+            onChange={onChange}
+            value={selectedId ?? ""}
+            disabled={disabled || challenges.length === 0}
+        >
+            <option value="" disabled>
+                {t("selectAChallenge")}
+            </option>
+            {challenges.map((chal) => (
+                <option key={chal.id} value={chal.id}>
+                    {chal.title}
                 </option>
-                {challenges.map((chal) => (
-                    <option key={chal.id} value={chal.id}>
-                        {chal.title}
-                    </option>
-                ))}
-            </select>
-        </div>
+            ))}
+        </Select>
     );
 }
 

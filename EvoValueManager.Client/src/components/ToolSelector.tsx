@@ -1,6 +1,7 @@
-﻿import { ChangeEvent } from 'react';
-import { Tool } from '../interfaces/Tool';
-import { useTranslation } from 'react-i18next';
+﻿import { ChangeEvent } from "react";
+import { Tool } from "../interfaces/Tool";
+import { useTranslation } from "react-i18next";
+import Select from "./ui/Select";
 
 interface ToolSelectorProps {
     tools: Tool[];
@@ -10,35 +11,27 @@ interface ToolSelectorProps {
     disabled?: boolean;
 }
 
-function ToolSelector({
-                          tools,
-                          selectedId,
-                          onChange,
-                          label,
-                          disabled = false
-                      }: ToolSelectorProps) {
+function ToolSelector({ tools, selectedId, onChange, label, disabled = false }: ToolSelectorProps) {
     const { t } = useTranslation();
-    const displayLabel = label || t('selectTool');
-    const selectorId = "tool-selector";
+    const displayLabel = label || t("selectTool");
+
     return (
-        <div className="evo-margin evo-flex">
-            <label htmlFor={selectorId} className="evo-character-label">{displayLabel}</label>
-            <select
-                id={selectorId}
-                name={selectorId}
-                className="evo-dropdown evo-margin"
-                onChange={onChange}
-                value={selectedId ?? ""}
-                disabled={disabled || tools.length === 0}
-            >
-                <option value="" disabled>{t('selectATool')}</option>
-                {tools.map(tool => (
-                    <option key={tool.id} value={tool.id}>
-                        {tool.name}
-                    </option>
-                ))}
-            </select>
-        </div>
+        <Select
+            label={displayLabel}
+            name="tool-selector"
+            onChange={onChange}
+            value={selectedId ?? ""}
+            disabled={disabled || tools.length === 0}
+        >
+            <option value="" disabled>
+                {t("selectATool")}
+            </option>
+            {tools.map((tool) => (
+                <option key={tool.id} value={tool.id}>
+                    {tool.name}
+                </option>
+            ))}
+        </Select>
     );
 }
 

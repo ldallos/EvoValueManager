@@ -1,113 +1,108 @@
-﻿import { useState, useEffect, ChangeEvent } from "react";
+﻿import { useState, ChangeEvent } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
+import { AxiosError } from "axios";
 import * as api from "../api/api";
 import { Challenge } from "../interfaces/Challenge";
 import ChallengeSelector from "../components/ChallengeSelector";
 import ChallengeForm from "../components/ChallengeForm";
 import { useTranslation } from "react-i18next";
+import Button from "../components/ui/Button";
 
 function ChallengePage() {
     const { t } = useTranslation();
-    const [challenges, setChallenges] = useState<Challenge[]>([]);
-    const [selectedChallenge, setSelectedChallenge] =
-        useState<Challenge | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const queryClient = useQueryClient();
+    const [selectedChallengeId, setSelectedChallengeId] = useState<number | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
+    
+    const {
+        data: challenges = [],
+        isLoading,
+        error,
+    } = useQuery<Challenge[], Error>({
+        queryKey: ["challenges"],
+        queryFn: api.getChallenges,
+    });
+    
+    const challengeMutation = useMutation<Challenge, AxiosError, Challenge | Omit<Challenge, "id">>(
+        {
+            mutationFn: async (challengeData) => {
+                if ("id" in challengeData && challengeData.id) {
+                    await api.updateChallenge(challengeData.id, challengeData as Challenge);
+                    return challengeData as Challenge;
+                }
+                return api.createChallenge(challengeData as Omit<Challenge, "id">);
+            },
+            onSuccess: (data) => {
+                queryClient.invalidateQueries({ queryKey: ["challenges"] });
+                toast.success(data.id ? t("challengeUpdatedAlert") : t("challengeAddedAlert"));
 
-    useEffect(() => {
-        const loadChallenges = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const data = await api.getChallenges();
-                setChallenges(data);
-            } catch (err) {
-                setError(t("failedToLoadChallengesError"));
-                console.error(err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        loadChallenges();
-    }, [t]);
+                setSelectedChallengeId(data.id);
+                setShowAddForm(false);
+            },
+            onError: (err) => {
+                const message =
+                    (err.response?.data as { message: string })?.message ||
+                    t("failedToSaveChangesError");
+                toast.error(message);
+            },
+        }
+    );
 
     const handleSelectChallenge = (event: ChangeEvent<HTMLSelectElement>) => {
-        const selectedId = Number(event.target.value);
-        const chal = challenges.find((c) => c.id === selectedId) || null;
-        setSelectedChallenge(chal);
+        const id = event.target.value ? Number(event.target.value) : null;
+        setSelectedChallengeId(id);
         setShowAddForm(false);
     };
 
     const toggleAddChallengeForm = () => {
         setShowAddForm((prev) => !prev);
-        setSelectedChallenge(null);
+        setSelectedChallengeId(null);
     };
 
-    const handleFormSubmit = async (
-        challengeData: Omit<Challenge, "id"> | Challenge) => {
-        setIsSaving(true);
-        setError(null);
-        try {
-            if ("id" in challengeData && challengeData.id) {
-                const updated = challengeData as Challenge;
-                await api.updateChallenge(updated.id, updated);
-                setChallenges((prev) =>
-                    prev.map((c) => (c.id === updated.id ? updated : c))
-                );
-                setSelectedChallenge(updated);
-                alert(t("challengeUpdatedAlert"));
-            } else {
-                const newChallenge = await api.createChallenge(challengeData);
-                setChallenges((prev) => [...prev, newChallenge]);
-                setShowAddForm(false);
-                setSelectedChallenge(newChallenge);
-                alert(t("challengeAddedAlert"));
-            }
-        } catch (err: any) {
-            const message = err.response?.data?.message || err.response?.data || t("failedToSaveChangesError");
-            setError(message);
-            console.error(err);
-        } finally {
-            setIsSaving(false);
-        }
+    const handleCancelForm = () => {
+        setShowAddForm(false);
     };
 
-    if (isLoading) return <p>{t("loadingChallenges")}</p>;
+    const selectedChallenge = challenges.find((c) => c.id === selectedChallengeId) || null;
+
+    if (isLoading) return <div className="text-center p-10">{t("loadingChallenges")}...</div>;
+    if (error)
+        return (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md">
+                {t("errorLoadingPage")}: {error.message}
+            </div>
+        );
 
     return (
-        <div className="page-container">
-            <h1>{t("challengesTitle")}</h1>
-            {error && !isSaving && (
-                <p className="error-message">{t("errorLoadingPage")}: {error}</p>
-            )}
+        <div className="space-y-6">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+                {t("challengesTitle")}
+            </h1>
 
-            <ChallengeSelector
-                challenges={challenges}
-                selectedId={selectedChallenge?.id ?? null}
-                onChange={handleSelectChallenge}
-                label={t("selectChallengeLabel")}
-                disabled={isLoading || isSaving}
-            />
-
-            <button
-                onClick={toggleAddChallengeForm}
-                disabled={isLoading || isSaving}
-                className="evo-margin btn"
-            >
-                {showAddForm ? t("back") : t("addNewChallengeButton")}
-            </button>
-
-            {error && isSaving && <p className="error-message">{t("errorSavingForm")}: {error}</p>}
-
-            {(showAddForm || (selectedChallenge && !showAddForm)) && (
-                <ChallengeForm
-                    key={selectedChallenge?.id ?? "new-challenge-form"}
-                    initialData={showAddForm ? null : selectedChallenge}
-                    onSubmit={handleFormSubmit}
-                    onCancel={showAddForm ? toggleAddChallengeForm : () => setSelectedChallenge(null)}
-                    isSaving={isSaving}
+            <div className="bg-white p-4 rounded-lg shadow flex flex-wrap items-center gap-4">
+                <ChallengeSelector
+                    challenges={challenges}
+                    selectedId={selectedChallengeId}
+                    onChange={handleSelectChallenge}
+                    label={t("selectChallengeLabel")}
+                    disabled={challengeMutation.isPending}
                 />
+                <Button onClick={toggleAddChallengeForm} disabled={challengeMutation.isPending}>
+                    {showAddForm ? t("backToList") : t("addNewChallengeButton")}
+                </Button>
+            </div>
+            
+            {(showAddForm || selectedChallenge) && (
+                <div className="bg-white p-6 rounded-lg shadow">
+                    <ChallengeForm
+                        key={selectedChallenge?.id ?? "new"}
+                        initialData={showAddForm ? null : selectedChallenge}
+                        onSubmit={(data) => challengeMutation.mutate(data)}
+                        onCancel={handleCancelForm}
+                        isSaving={challengeMutation.isPending}
+                    />
+                </div>
             )}
         </div>
     );
