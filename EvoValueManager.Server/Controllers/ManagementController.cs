@@ -1,9 +1,11 @@
+using EvoCharacterManager.Data;
 using EvoCharacterManager.Models.ViewModels;
 using EvoCharacterManager.Services;
 using EvoValueManager.Models.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EvoCharacterManager.Dto;
+using EvoCharacterManager.Models.Entities;
 
 namespace EvoCharacterManager.Controllers
 {
@@ -15,15 +17,18 @@ namespace EvoCharacterManager.Controllers
         private readonly IManagementService _managementService;
         private readonly ICharacterService _characterService;
         private readonly IChallengeService _challengeService;
+        private readonly CharacterManagerContext  _context;
 
         public ManagementController(
             IManagementService managementService,
             ICharacterService characterService,
-            IChallengeService challengeService)
+            IChallengeService challengeService,
+            CharacterManagerContext context)
         {
             _managementService = managementService;
             _characterService = characterService;
             _challengeService = challengeService;
+            _context = context;
         }
 
         private string GetStateTextFromId(int stateId)
@@ -171,21 +176,18 @@ namespace EvoCharacterManager.Controllers
                 await _managementService.AssignChallenge(payload.CharacterId, payload.ChallengeId, payload.StateId,
                     payload.Details);
 
-                await _managementService.SaveChanges();
-
                 return Ok(new { message = "Challenge assigned successfully." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "An error occurred while assigning the challenge.");
+                return StatusCode(500, new { message = "An error occurred while assigning the challenge." });
             }
         }
 
 
         // PUT: api/Management/{characterId}/{challengeId}
         [HttpPut("{characterId}/{challengeId}")]
-        public async Task<IActionResult> UpdateAssignment(int characterId, int challengeId,
-            [FromBody] UpdateManagementPayload payload)
+        public async Task<IActionResult> UpdateAssignment(int characterId, int challengeId, [FromBody] UpdateManagementPayload payload)
         {
             var management = await _managementService.GetManagement(characterId, challengeId);
             if (management == null)
@@ -200,18 +202,12 @@ namespace EvoCharacterManager.Controllers
 
             try
             {
-                string newStateText = GetStateTextFromId(payload.StateId);
-                await _managementService.UpdateState(characterId, challengeId, newStateText);
-                await _managementService.UpdateManagementDetails(characterId, challengeId, payload.Details);
+                await _managementService.UpdateManagement(characterId, challengeId, payload.StateId, payload.Details);
 
                 return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
             catch (Exception ex)
-            {
+            { 
                 return StatusCode(500, "An error occurred while updating the assignment.");
             }
         }
@@ -249,8 +245,8 @@ namespace EvoCharacterManager.Controllers
                 character.Care += challenge.GainableCare ?? 0;
 
                 management.IsClosed = true;
-
-                await _managementService.SaveChanges();
+                
+                await GrantAchievements(character);
 
                 var updatedCharacterViewModel = new CharacterViewModel
                 {
@@ -268,6 +264,56 @@ namespace EvoCharacterManager.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, "An error occurred while closing the challenge.");
+            }
+        }
+
+        private async Task GrantAchievements(Character character)
+        {
+            var earnedAchievementIds = await _context.CharacterAchievements
+                .Where(ca => ca.CharacterId == character.ID)
+                .Select(ca => ca.AchievementId)
+                .ToListAsync();
+
+            var allAchievements = await _context.Achievements.ToListAsync();
+
+            var firstChallenge = allAchievements.FirstOrDefault(a => a.Name == "First Challenge");
+            if (firstChallenge != null && !earnedAchievementIds.Contains(firstChallenge.Id))
+            {
+                _context.CharacterAchievements.Add(new CharacterAchievement
+                    { CharacterId = character.ID, AchievementId = firstChallenge.Id });
+            }
+            
+            var braveryAch = allAchievements.FirstOrDefault(a => a.Name == "Bravery Initiate");
+            if (braveryAch != null && !earnedAchievementIds.Contains(braveryAch.Id) && character.Bravery >= 50)
+            {
+                _context.CharacterAchievements.Add(
+                    new CharacterAchievement
+                    {
+                        CharacterId = character.ID, 
+                        AchievementId = braveryAch.Id
+                    });
+            }
+            
+            var growthAch = allAchievements.FirstOrDefault(a => a.Name == "Growth Adept");
+            if (growthAch != null && !earnedAchievementIds.Contains(growthAch.Id) && character.Growth >= 50)
+            {
+                _context.CharacterAchievements.Add(
+                    new CharacterAchievement
+                    {
+                        CharacterId = character.ID, 
+                        AchievementId = growthAch.Id
+                    });
+            }
+            
+            var teamPillarAch = allAchievements.FirstOrDefault(a => a.Name == "Team Pillar");
+            if (teamPillarAch != null && !earnedAchievementIds.Contains(teamPillarAch.Id) && character.Trust >= 50)
+            {
+                _context.CharacterAchievements.Add(
+                    new CharacterAchievement
+                    {
+                        CharacterId = character.ID, 
+                        AchievementId = teamPillarAch.Id
+                    });
             }
         }
 

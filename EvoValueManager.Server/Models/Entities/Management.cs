@@ -10,8 +10,8 @@ namespace EvoCharacterManager.Models.Entities
         [Column("character_id")]
         public int CharacterId { get; set; }
 
-        [Column("challange_id")]
-        public int ChallangeId { get; set; }
+        [Column("challenge_id")]
+        public int ChallengeId { get; set; }
 
         [Column("state")]
         public string State { get; set; } = string.Empty;

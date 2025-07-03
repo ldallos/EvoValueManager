@@ -50,26 +50,26 @@ function ToolForm({ initialData, onSubmit, onCancel, isSaving }: ToolFormProps) 
 
     return (
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h3 className="text-xl font-semibold text-white">
                 {initialData ? t("toolEdit") : t("toolAdd")}
             </h3>
 
             <Input label={t("toolIdentifier")} error={errors.name} {...register("name")} />
 
             <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="description" className="block text-sm font-medium text-slate-400">
                     {t("description")}:
                 </label>
                 <textarea
                     id="description"
                     rows={3}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-evogreen focus:border-evogreen sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm sm:text-sm bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     {...register("description")}
                 />
             </div>
 
-            <fieldset>
-                <legend className="text-lg font-medium text-gray-900">{t("valueBonuses")}</legend>
+            <fieldset className="space-y-4 rounded-lg border border-slate-700 p-4">
+                <legend className="px-2 font-medium text-slate-300">{t("valueBonuses")}</legend>
                 <div className="mt-4 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2 lg:grid-cols-3">
                     {TRAITS.map((trait) => (
                         <Input
@@ -85,7 +85,7 @@ function ToolForm({ initialData, onSubmit, onCancel, isSaving }: ToolFormProps) 
                 </div>
             </fieldset>
 
-            <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center gap-4 pt-4 border-t border-slate-700">
                 <Button
                     type="submit"
                     variant="primary"

@@ -1,174 +1,102 @@
-﻿import { useState, useEffect, FormEvent, ChangeEvent } from "react";
+﻿import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Challenge } from "../interfaces/Challenge";
 import { TRAITS } from "../constants/traits";
 import { useTranslation } from "react-i18next";
-import { ErrorDictionary } from "../types/common";
+import Button from "./ui/Button";
+import Input from "./ui/Input";
 
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const challengeSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters long."),
+    requiredBravery: z.coerce.number().min(0).optional().nullable(),
+    requiredTrust: z.coerce.number().min(0).optional().nullable(),
+    requiredPresence: z.coerce.number().min(0).optional().nullable(),
+    requiredGrowth: z.coerce.number().min(0).optional().nullable(),
+    requiredCare: z.coerce.number().min(0).optional().nullable(),
+    gainableBravery: z.coerce.number().min(0).optional().nullable(),
+    gainableTrust: z.coerce.number().min(0).optional().nullable(),
+    gainablePresence: z.coerce.number().min(0).optional().nullable(),
+    gainableGrowth: z.coerce.number().min(0).optional().nullable(),
+    gainableCare: z.coerce.number().min(0).optional().nullable(),
+});
+
+type ChallengeFormData = z.infer<typeof challengeSchema>;
 
 interface ChallengeFormProps {
     initialData?: Challenge | null;
-    onSubmit: (challengeData: Omit<Challenge, "id"> | Challenge) => void;
+    onSubmit: (data: ChallengeFormData & { id?: number }) => void;
     onCancel?: () => void;
     isSaving: boolean;
 }
 
-type ChallengeStatKey = Exclude<keyof Omit<Challenge, "id" | "title">, undefined>;
-
-const defaultFormData: Omit<Challenge, "id"> = {
-    title: "",
-    requiredBravery: null,
-    requiredTrust: null,
-    requiredPresence: null,
-    requiredGrowth: null,
-    requiredCare: null,
-    gainableBravery: null,
-    gainableTrust: null,
-    gainablePresence: null,
-    gainableGrowth: null,
-    gainableCare: null,
-};
-
 function ChallengeForm({ initialData, onSubmit, onCancel, isSaving }: ChallengeFormProps) {
     const { t } = useTranslation();
-    const [formData, setFormData] = useState<Omit<Challenge, "id"> | Challenge>(
-        initialData ? { ...initialData } : { ...defaultFormData }
-    );
-    const [errors, setErrors] = useState<ErrorDictionary>({});
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+    } = useForm<ChallengeFormData>({
+        resolver: zodResolver(challengeSchema),
+        defaultValues: initialData || { title: "" },
+    });
 
     useEffect(() => {
-        setFormData(initialData ? { ...initialData } : { ...defaultFormData });
-        setErrors({});
-    }, [initialData]);
+        reset(initialData || { title: "" });
+    }, [initialData, reset]);
 
-    const validate = (): boolean => {
-        const newErrors: ErrorDictionary = {};
-        if (!formData.title || formData.title.trim().length === 0) {
-            newErrors.title = t("titleRequiredError");
-        }
-
-        TRAITS.forEach((trait) => {
-            const reqKey = `required${capitalize(trait.property)}` as ChallengeStatKey;
-            const gainKey = `gainable${capitalize(trait.property)}` as ChallengeStatKey;
-            const reqValue = formData[reqKey];
-            const gainValue = formData[gainKey];
-
-            if (reqValue != null && reqValue < 0) {
-                newErrors[reqKey] = t("valueCannotBeNegativeError", {
-                    trait: t(trait.property),
-                    type: t("required"),
-                });
-            }
-            if (gainValue != null && gainValue < 0) {
-                newErrors[gainKey] = t("valueCannotBeNegativeError", {
-                    trait: t(trait.property),
-                    type: t("gainable"),
-                });
-            }
-        });
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+    const handleFormSubmit = (data: ChallengeFormData) => {
+        onSubmit({ ...data, id: initialData?.id });
     };
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value, type } = e.target;
-
-        let processedValue: string | number | null = value;
-        if (type === "number") {
-            processedValue = value === "" ? null : parseInt(value, 10);
-            if (isNaN(processedValue as number)) {
-                processedValue = null;
-            }
-        }
-
-        setFormData((prev) => ({
-            ...prev,
-            [name]: processedValue,
-        }));
-
-        if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: "" }));
-        }
-    };
-
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
-        if (validate()) {
-            if (initialData && initialData.id) {
-                onSubmit({ ...formData, id: initialData.id } as Challenge);
-            } else {
-                onSubmit(formData);
-            }
-        }
-    };
-
-    const renderStatInput = (statType: "required" | "gainable", traitProperty: string) => {
-        const name = (`${statType}` + capitalize(traitProperty)) as ChallengeStatKey;
-        const value = formData[name];
-
+    const renderStatInput = (statType: "required" | "gainable", property: string) => {
+        const name = `${statType}${property.charAt(0).toUpperCase() + property.slice(1)}` as keyof ChallengeFormData;
         return (
-            <div className="form-group form-group-stat" key={name}>
-                <label htmlFor={name}>
-                    {t(traitProperty)}({statType === "required" ? t("required") : t("gainable")}):
-                </label>
-                <input
-                    className="form-control"
-                    type="number"
-                    id={name}
-                    name={name}
-                    value={value ?? ""}
-                    onChange={handleChange}
-                    min="0"
-                    placeholder="0"
-                />
-                {errors[name] && <span className="error-message">{errors[name]}</span>}
-            </div>
-        );
+            <Input
+                key={name}
+                label={`${t(property)} (${t(statType)})`}
+                type="number"
+                min="0"
+                placeholder="0"
+                error={errors[name]}
+                {...register(name)}
+            />
+        )
     };
 
     return (
-        <form onSubmit={handleSubmit} className="challenge-form">
-            <h3>{initialData ? t("editChallenge") : t("addNewChallenge")}</h3>
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+            <h3 className="text-xl font-semibold text-white">
+                {initialData ? t("editChallenge") : t("addNewChallenge")}
+            </h3>
 
-            <div className="form-group">
-                <label htmlFor="title">{t("challengeName")}</label>
-                <input
-                    className="form-control"
-                    type="text"
-                    id="title"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    minLength={3}
-                    maxLength={100}
-                    required
-                />
-                {errors.title && <span className="error-message">{errors.title}</span>}
-            </div>
+            <Input label={t("challengeName")} error={errors.title} {...register("title")} />
 
-            <fieldset className="stats-fieldset">
-                <legend>{t("requiredValues")}</legend>
-                <div className="stats-grid">
+            <fieldset className="space-y-4 rounded-lg border border-slate-700 p-4">
+                <legend className="px-2 font-medium text-slate-300">{t("requiredValues")}</legend>
+                <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2 lg:grid-cols-3">
                     {TRAITS.map((trait) => renderStatInput("required", trait.property))}
                 </div>
             </fieldset>
 
-            <fieldset className="stats-fieldset">
-                <legend>{t("gainableValues")}</legend>
-                <div className="stats-grid">
+            <fieldset className="space-y-4 rounded-lg border border-slate-700 p-4">
+                <legend className="px-2 font-medium text-slate-300">{t("gainableValues")}</legend>
+                <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2 lg:grid-cols-3">
                     {TRAITS.map((trait) => renderStatInput("gainable", trait.property))}
                 </div>
             </fieldset>
 
-            <div className="form-actions">
-                <button type="submit" disabled={isSaving} className="btn primary">
+            <div className="flex items-center gap-4 pt-4 border-t border-slate-700">
+                <Button type="submit" variant="primary" isLoading={isSaving} loadingText={t("saving")}>
                     {isSaving ? t("saving") : initialData ? t("saveChanges") : t("addChallenge")}
-                </button>
+                </Button>
                 {onCancel && (
-                    <button type="button" onClick={onCancel} disabled={isSaving} className="btn">
+                    <Button type="button" onClick={onCancel} disabled={isSaving}>
                         {t("cancel")}
-                    </button>
+                    </Button>
                 )}
             </div>
         </form>

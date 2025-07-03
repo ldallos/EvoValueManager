@@ -4,6 +4,7 @@ import { Character } from "../interfaces/Character";
 import Card from "./ui/Card";
 import { useDebounce } from "../hooks/useDebounce";
 import CharacterCard from "./CharacterCard";
+import AnimatedDiv from "../components/ui/AnimatedDiv.tsx";
 
 interface CharacterGridProps {
     characters: Character[];
@@ -54,7 +55,7 @@ function CharacterGrid({
                 />
             </div>
 
-            <div className="flex-grow overflow-y-auto -m-2 p-2">
+            <div className="flex-grow overflow-y-auto -m-2 p-2 no-scrollbar">
                 {isLoading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <SkeletonCard />
@@ -63,18 +64,22 @@ function CharacterGrid({
                         <SkeletonCard />
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-4 w-full">
                         {filteredCharacters.length > 0 ? (
-                            filteredCharacters.map((char) => (
-                                <CharacterCard
-                                    key={char.id}
-                                    character={char}
-                                    isSelected={selectedCharacterId === char.id}
-                                    onClick={() => onCharacterSelect(char.id)}
-                                />
+                            filteredCharacters.map((char, index) => (
+                                <AnimatedDiv 
+                                    key={char.id} 
+                                    delay={index}
+                                >
+                                    <CharacterCard
+                                        character={char}
+                                        isSelected={selectedCharacterId === char.id}
+                                        onClick={() => onCharacterSelect(char.id)}
+                                    />
+                                </AnimatedDiv>
                             ))
                         ) : (
-                            <div className="sm:col-span-2 text-center text-slate-400 pt-10">
+                            <div className="text-center text-slate-400 pt-10">
                                 <p>No characters match your search.</p>
                             </div>
                         )}

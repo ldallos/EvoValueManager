@@ -9,6 +9,15 @@ namespace EvoCharacterManager.Models.Entities
 
         [Column("name")]
         public string Name { get; set; } = string.Empty;
+        
+        [Column("title")]
+        public string? Title { get; set; }
+
+        [Column("avatar_image")]
+        public byte[]? AvatarImage { get; set; }
+
+        [Column("avatar_image_type")]
+        public string? AvatarImageType { get; set; }
 
         [Column("bravery")] public int Bravery { get; set; } = 0;
 

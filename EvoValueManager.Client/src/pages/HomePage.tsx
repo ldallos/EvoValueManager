@@ -1,45 +1,54 @@
-﻿import { TRAITS } from "../constants/traits";
-import { useTranslation } from "react-i18next";
+﻿// D:\Programming\CSharp\EvoValueManager\EvoValueManager.Client\src\pages\HomePage.tsx
+import { TRAITS } from "../constants/traits";
+import AnimatedDiv from "../components/ui/AnimatedDiv";
+import HeroSection from "../components/ui/HeroSection"; // <-- NEW IMPORT
 
 function HomePage() {
-    const { t } = useTranslation();
     return (
-        <div className="space-y-12">
-            <div className="text-center py-8">
-                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
-                    <span className="text-evogreen">Evo</span>ValueManager
-                </h1>
-                <div className="mt-4 max-w-2xl mx-auto text-lg text-gray-600 space-y-2">
-                    <p>{t("welcome")}</p>
-                    <p>{t("setEvoValue")}</p>
-                    <p>{t("homeDescription")}</p>
-                </div>
-            </div>
+        <>
+            <HeroSection />
 
-            <div className="space-y-16">
+            <div id="values-section" className="container mx-auto py-16 sm:py-24 space-y-24 md:space-y-32">
                 {TRAITS.map((trait, index) => (
-                    <div
-                        key={trait.property}
-                        className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 md:gap-12"
-                    >
+                    <AnimatedDiv key={trait.property} delay={index}>
                         <div
-                            className={`p-6 bg-gray-100 rounded-lg ${index % 2 !== 0 ? "md:order-last" : ""}`}
+                            className={`flex flex-col md:flex-row items-center gap-8 lg:gap-16 ${
+                                index % 2 === 1 ? 'md:flex-row-reverse' : ''
+                            }`}
                         >
-                            <img
-                                src={trait.image}
-                                alt={trait.title}
-                                className="w-full h-auto max-h-72 object-contain"
-                                loading="lazy"
-                            />
+                            {/* Image Side */}
+                            <div className="w-full md:w-1/2 flex justify-center">
+                                <div className="relative w-72 h-72 p-4 bg-slate-800/50 rounded-2xl border border-slate-700 shadow-xl">
+                                    <img
+                                        src={trait.image}
+                                        alt={trait.title}
+                                        className="w-full h-full object-contain"
+                                        loading="lazy"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Text Side */}
+                            <div className="w-full md:w-1/2 text-center md:text-left">
+                                <div className="flex items-center justify-center md:justify-start gap-4 mb-4">
+                                    <img
+                                        src={trait.imageSmall}
+                                        alt={`${trait.title} icon`}
+                                        className="w-12 h-12"
+                                    />
+                                    <h2 className="text-3xl font-bold text-white">
+                                        {trait.title}
+                                    </h2>
+                                </div>
+                                <p className="text-slate-300 leading-relaxed text-lg">
+                                    {trait.description}
+                                </p>
+                            </div>
                         </div>
-                        <div className="space-y-3">
-                            <h2 className="text-3xl font-bold text-gray-800">{trait.title}</h2>
-                            <p className="text-gray-600 leading-relaxed">{trait.description}</p>
-                        </div>
-                    </div>
+                    </AnimatedDiv>
                 ))}
             </div>
-        </div>
+        </>
     );
 }
 

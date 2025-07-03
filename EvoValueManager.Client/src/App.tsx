@@ -1,11 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import HomePage from "./pages/HomePage";
-import CharacterPage from "./pages/CharacterPage";
 import Navigation from "./components/Navigation";
-import ManagementPage from "./pages/ManagementPage.tsx";
-import ChallengePage from "./pages/ChallengePage.tsx";
-import ToolsPage from "./pages/ToolsPage.tsx";
-import ToolAssignmentPage from "./pages/ToolAssignmentPage.tsx";
+import HomePage from "./pages/HomePage";
+import DashboardPage from "./pages/DashboardPage";
+import TeamPage from "./pages/TeamPage";
+import LibraryPage from "./pages/LibraryPage";
 
 function App() {
     return (
@@ -14,12 +12,10 @@ function App() {
                 <Navigation />
                 <main className="flex-grow container mx-auto p-4 sm:p-6 lg:p-8">
                     <Routes>
-                        <Route path="/characters" element={<CharacterPage />} />
-                        <Route path="/challenges" element={<ChallengePage />} />
-                        <Route path="/management" element={<ManagementPage />} />
-                        <Route path="/tools" element={<ToolsPage />} />
-                        <Route path="/tool-assignment" element={<ToolAssignmentPage />} />
                         <Route path="/" element={<HomePage />} />
+                        <Route path="/dashboard" element={<DashboardPage />} />
+                        <Route path="/team" element={<TeamPage />} />
+                        <Route path="/library/:tab" element={<LibraryPage />} />
                     </Routes>
                 </main>
             </div>

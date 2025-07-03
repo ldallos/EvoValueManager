@@ -1,5 +1,6 @@
 ﻿import React from "react";
 import { FieldError } from "react-hook-form";
+import { cn } from "../../utils/cn";
 
 type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
     label: string;
@@ -8,9 +9,9 @@ type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
 };
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-    ({ label, name, error, children, ...props }, ref) => (
-        <div className="w-full sm:max-w-xs">
-            <label htmlFor={name} className="block text-sm font-medium text-gray-700">
+    ({ label, name, error, children, className, ...props }, ref) => (
+        <div className="w-full">
+            <label htmlFor={name} className="block text-sm font-medium text-slate-400">
                 {label}
             </label>
             <div className="mt-1">
@@ -18,15 +19,19 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                     id={name}
                     name={name}
                     ref={ref}
-                    className={`block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-evogreen focus:border-evogreen sm:text-sm rounded-md ${
-                        error ? "border-red-500" : "border-gray-300"
-                    }`}
+                    className={cn(
+                        `block w-full pl-3 pr-10 py-2 text-base rounded-md focus:outline-none sm:text-sm
+                        bg-slate-800 border-slate-600 text-white
+                        focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`,
+                        error ? "border-red-500" : "border-gray-300",
+                        className
+                    )}
                     {...props}
                 >
                     {children}
                 </select>
             </div>
-            {error?.message && <p className="mt-2 text-sm text-red-600">{error.message}</p>}
+            {error?.message && <p className="mt-2 text-sm text-red-400">{error.message}</p>}
         </div>
     )
 );

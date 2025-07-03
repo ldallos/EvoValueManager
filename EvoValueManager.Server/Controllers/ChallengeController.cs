@@ -83,7 +83,6 @@ namespace EvoCharacterManager.Controllers
             
             var challenge = new Challenge
             {
-                ID = challengeViewModel.Id,
                 Title = challengeViewModel.Title,
                 RequiredBravery = challengeViewModel.RequiredBravery,
                 RequiredTrust = challengeViewModel.RequiredTrust,
@@ -101,6 +100,7 @@ namespace EvoCharacterManager.Controllers
             
             var createdViewModel = new ChallengeViewModel
             {
+                Id = challenge.ID,
                 Title = challenge.Title,
                 RequiredBravery = challenge.RequiredBravery,
                 RequiredTrust = challenge.RequiredTrust,

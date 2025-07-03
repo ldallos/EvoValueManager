@@ -1,22 +1,33 @@
-﻿import { Swords, BookOpen, Shield, Wand, Gem } from "lucide-react";
+﻿import { AlignEndHorizontal, Sprout, Moon, ShieldCheck, Origami } from "lucide-react";
 import { Character } from "../interfaces/Character";
 
-export type StatName = Exclude<keyof Character, "id" | "name">;
+export type StatName = keyof Omit<Character, "id" | "name" | "title" | "hasAvatar" | "achievements">;
 
-export const STAT_NAMES: StatName[] = ["bravery", "trust", "presence", "growth", "care"];
+export const STAT_NAMES: StatName[] = ["growth", "care", "presence", "trust", "bravery"];
+
+const statColorsMap: { [key: string]: string } = {
+    growth: "#EFFF00",
+    care: "#2CD05C",
+    presence: "#007A8A",
+    trust: "#A0A0A0",
+    bravery: "#FF8C73",
+};
+
 
 interface StatIconProps {
     stat: StatName;
     className?: string;
 }
 
-const StatIcon = ({ stat, className = "w-4 h-4" }: StatIconProps) => {
+const StatIcon = ({ stat, className = "w-6 h-6" }: StatIconProps) => {
+    const iconColor = statColorsMap[stat];
+
     const iconMap: Record<StatName, React.ReactElement> = {
-        bravery: <Swords className={`${className} text-red-400`} />,
-        trust: <Shield className={`${className} text-sky-400`} />,
-        presence: <Gem className={`${className} text-yellow-400`} />,
-        growth: <BookOpen className={`${className} text-green-400`} />,
-        care: <Wand className={`${className} text-purple-400`} />,
+        growth: <AlignEndHorizontal className={`${className}`} fill={iconColor} color={iconColor} />,
+        care: <Sprout className={`${className}`} fill={iconColor} color={iconColor} />,
+        presence: <Moon className={`${className}`} color={iconColor} />,
+        trust: <ShieldCheck className={`${className}`} color={iconColor} />,
+        bravery: <Origami className={`${className}`} color={iconColor} />,
     };
 
     return iconMap[stat] || null;

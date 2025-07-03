@@ -3,6 +3,8 @@ import { Character } from "../interfaces/Character.ts";
 import { Challenge } from "../interfaces/Challenge.ts";
 import { ManagementDetails, AssignChallenge, UpdateManagement } from "../interfaces/Management.ts";
 import { Tool } from "../interfaces/Tool.ts";
+import { Achievement } from "../interfaces/Achievement"
+import { TeamStat } from "../interfaces/Dashboard"
 
 const API_BASE_URL = "/api";
 
@@ -26,6 +28,19 @@ export const createCharacter = (characterData: Omit<Character, "id">): Promise<C
 
 export const updateCharacter = (id: number, characterData: Character): Promise<void> =>
     apiClient.put(`/Character/${id}`, characterData);
+
+export const uploadAvatar = (characterId: number, file: File): Promise<{ message: string }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return apiClient
+        .post(`/Character/${characterId}/avatar`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        })
+        .then((res) => res.data);
+};
 
 // CHALLENGE API
 
@@ -97,3 +112,13 @@ export const unassignToolFromCharacter = (
     toolId: number
 ): Promise<{ message: string }> =>
     apiClient.delete(`/charactertool/${characterId}/unassign/${toolId}`).then((res) => res.data);
+
+// ACHIEVEMENT API
+
+export const getCharacterAchievements = (characterId: number): Promise<Achievement[]> =>
+    apiClient.get(`/Character/${characterId}/achievements`).then((res) => res.data);
+
+// DASHBOARD API
+
+export const getTeamStats = (): Promise<TeamStat[]> =>
+    apiClient.get("/dashboard/team-stats").then((res) => res.data);

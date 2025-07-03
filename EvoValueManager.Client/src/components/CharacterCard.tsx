@@ -2,7 +2,7 @@
 import { Character } from "../interfaces/Character";
 import { cn } from "../utils/cn";
 import { User } from "lucide-react";
-import StatIcon, { STAT_NAMES } from "./StatIcon";
+import CompactStatDisplay from "./CompactStatDisplay.tsx";
 
 interface CharacterCardProps {
     character: Character;
@@ -11,6 +11,8 @@ interface CharacterCardProps {
 }
 
 function CharacterCard({ character, isSelected, onClick }: CharacterCardProps) {
+    const avatarSrc = `/api/Character/${character.id}/avatar`;
+
     return (
         <button
             onClick={onClick}
@@ -21,26 +23,38 @@ function CharacterCard({ character, isSelected, onClick }: CharacterCardProps) {
                     : "bg-slate-800 border-slate-700 hover:border-slate-600 hover:-translate-y-1"
             )}
         >
-            <div className="flex flex-col items-center text-center">
-                <div className="w-24 h-24 rounded-full bg-slate-700 mb-4 flex items-center justify-center border-2 border-slate-600">
-                    <User className="w-12 h-12 text-slate-500" />
+            <div className="flex flex-col items-center w-full">
+                {/* Top Section: Avatar, Title, and Name */}
+                <div className="flex flex-col items-center mb-4">
+                    <div className="relative mb-2">
+                        {character.hasAvatar ? (
+                            <img
+                                className="w-20 h-20 rounded-full object-cover"
+                                src={avatarSrc}
+                                alt={character.name}
+                            />
+                        ) : (
+                            <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center">
+                                <User className="w-10 h-10 text-slate-500" />
+                            </div>
+                        )}
+                        {character.title && (
+                            <div className="absolute -bottom-1 w-full flex justify-center">
+                                <span className="text-[10px] font-bold text-white bg-black/50 px-1.5 py-0.5 rounded-full uppercase">
+                                    {character.title}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                    {/* Character Name under Avatar */}
+                    <p className="font-semibold text-white text-lg text-center truncate w-full max-w-sm px-2">
+                        {character.name}
+                    </p>
                 </div>
 
-                {/* Name */}
-                <h3 className="font-bold text-lg text-white truncate w-full">{character.name}</h3>
-                
-                <div className="w-full mt-4 grid grid-cols-5 gap-2">
-                    {STAT_NAMES.map((stat) => (
-                        <div
-                            key={stat}
-                            className="flex flex-col items-center p-1 bg-slate-900/50 rounded-md"
-                        >
-                            <StatIcon stat={stat} className="w-5 h-5" />
-                            <span className="text-xs font-bold text-slate-300 mt-1">
-                                {character[stat]}
-                            </span>
-                        </div>
-                    ))}
+                {/* Bottom Section: Compact Stat Display */}
+                <div className="w-full max-w-sm">
+                    <CompactStatDisplay character={character} />
                 </div>
             </div>
         </button>

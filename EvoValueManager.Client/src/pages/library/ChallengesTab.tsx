@@ -2,14 +2,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { AxiosError } from "axios";
-import * as api from "../api/api";
-import { Challenge } from "../interfaces/Challenge";
-import ChallengeSelector from "../components/ChallengeSelector";
-import ChallengeForm from "../components/ChallengeForm";
+import * as api from "../../api/api";
+import { Challenge } from "../../interfaces/Challenge";
+import ChallengeSelector from "../../components/ChallengeSelector";
+import ChallengeForm from "../../components/ChallengeForm";
 import { useTranslation } from "react-i18next";
-import Button from "../components/ui/Button";
+import Button from "../../components/ui/Button";
+import Card from "../../components/ui/Card";
 
-function ChallengePage() {
+function ChallengesTab() {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [selectedChallengeId, setSelectedChallengeId] = useState<number | null>(null);
@@ -60,10 +61,6 @@ function ChallengePage() {
         setSelectedChallengeId(null);
     };
 
-    const handleCancelForm = () => {
-        setShowAddForm(false);
-    };
-
     const selectedChallenge = challenges.find((c) => c.id === selectedChallengeId) || null;
 
     if (isLoading) return <div className="text-center p-10">{t("loadingChallenges")}...</div>;
@@ -76,11 +73,7 @@ function ChallengePage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-                {t("challengesTitle")}
-            </h1>
-
-            <div className="bg-white p-4 rounded-lg shadow flex flex-wrap items-center gap-4">
+            <Card className="p-4 flex flex-wrap items-center gap-4">
                 <ChallengeSelector
                     challenges={challenges}
                     selectedId={selectedChallengeId}
@@ -91,21 +84,23 @@ function ChallengePage() {
                 <Button onClick={toggleAddChallengeForm} disabled={challengeMutation.isPending}>
                     {showAddForm ? t("backToList") : t("addNewChallengeButton")}
                 </Button>
-            </div>
-            
+            </Card>
+
             {(showAddForm || selectedChallenge) && (
-                <div className="bg-white p-6 rounded-lg shadow">
+                <Card className="p-6">
                     <ChallengeForm
                         key={selectedChallenge?.id ?? "new"}
                         initialData={showAddForm ? null : selectedChallenge}
                         onSubmit={(data) => challengeMutation.mutate(data)}
-                        onCancel={handleCancelForm}
+                        onCancel={() => {
+                            setShowAddForm(false);
+                            setSelectedChallengeId(null);
+                        }}
                         isSaving={challengeMutation.isPending}
                     />
-                </div>
+                </Card>
             )}
         </div>
     );
 }
-
-export default ChallengePage;
+export default ChallengesTab;

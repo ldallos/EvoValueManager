@@ -5,7 +5,17 @@
 @layer base {
     html {
         font-family: "Poppins", sans-serif;
-        @apply antialiased bg-gray-50 text-gray-800;
+        @apply antialiased bg-slate-900 text-slate-300;
         overflow-y: scroll;
+    }
+}
+
+@layer utilities {
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 }
