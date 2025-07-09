@@ -46,11 +46,11 @@ namespace EvoCharacterManager.Models.ViewModels
                 return new SelectList(
                     new List<SelectListItem>
                     {
-                        new SelectListItem(Resources.ChallengeState_New, "1"),
-                        new SelectListItem(Resources.ChallengeState_InProgress, "2"),
-                        new SelectListItem(Resources.ChallengeState_Completed, "3"),
-                        new SelectListItem(Resources.ChallengeState_Suspended, "4"),
-                        new SelectListItem(Resources.ChallengeState_Cancelled, "5")
+                        new(Resources.ChallengeState_New, "1"),
+                        new(Resources.ChallengeState_InProgress, "2"),
+                        new(Resources.ChallengeState_Completed, "3"),
+                        new(Resources.ChallengeState_Suspended, "4"),
+                        new(Resources.ChallengeState_Cancelled, "5")
                     },
                     "Value",
                     "Text");

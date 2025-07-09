@@ -27,21 +27,37 @@ namespace EvoCharacterManager.Data
             modelBuilder.Entity<Achievement>().ToTable("achievement");
             modelBuilder.Entity<CharacterAchievement>().ToTable("character_achievement");
 
+            modelBuilder.Entity<Management>()
+                .HasOne<Character>()
+                .WithMany()
+                .HasForeignKey(m => m.CharacterId)
+                .OnDelete(DeleteBehavior.Cascade); 
             modelBuilder.Entity<CharacterTool>()
-                .HasOne(ct => ct.Character).WithMany().HasForeignKey(ct => ct.CharacterId)
+                .HasOne(ct => ct.Character)
+                .WithMany()
+                .HasForeignKey(ct => ct.CharacterId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<CharacterTool>()
-                .HasOne(ct => ct.Tool).WithMany().HasForeignKey(ct => ct.ToolId).OnDelete(DeleteBehavior.Cascade);
+                .HasOne(ct => ct.Tool)
+                .WithMany()
+                .HasForeignKey(ct => ct.ToolId)
+                .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<CharacterTool>()
-                .HasIndex(ct => new { ct.CharacterId, ct.ToolId }).IsUnique();
+                .HasIndex(ct => new { ct.CharacterId, ct.ToolId })
+                .IsUnique();
             modelBuilder.Entity<CharacterAchievement>()
-                .HasOne(ca => ca.Character).WithMany().HasForeignKey(ca => ca.CharacterId)
+                .HasOne(ca => ca.Character)
+                .WithMany()
+                .HasForeignKey(ca => ca.CharacterId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<CharacterAchievement>()
-                .HasOne(ca => ca.Achievement).WithMany().HasForeignKey(ca => ca.AchievementId)
+                .HasOne(ca => ca.Achievement)
+                .WithMany()
+                .HasForeignKey(ca => ca.AchievementId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<CharacterAchievement>()
-                .HasIndex(ca => new { ca.CharacterId, ca.AchievementId }).IsUnique();
+                .HasIndex(ca => new { ca.CharacterId, ca.AchievementId })
+                .IsUnique();
         }
     }
 }

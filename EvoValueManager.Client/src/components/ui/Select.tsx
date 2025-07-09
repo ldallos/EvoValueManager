@@ -1,6 +1,6 @@
 ﻿import React from "react";
 import { FieldError } from "react-hook-form";
-import { cn } from "../../utils/cn";
+import { cn } from "@/utils/cn.ts";
 
 type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
     label: string;
@@ -11,7 +11,10 @@ type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     ({ label, name, error, children, className, ...props }, ref) => (
         <div className="w-full">
-            <label htmlFor={name} className="block text-sm font-medium text-slate-400">
+            <label
+                htmlFor={name}
+                className="block text-sm font-medium text-slate-400"
+            >
                 {label}
             </label>
             <div className="mt-1">
@@ -31,7 +34,9 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                     {children}
                 </select>
             </div>
-            {error?.message && <p className="mt-2 text-sm text-red-400">{error.message}</p>}
+            {error?.message && (
+                <p className="mt-2 text-sm text-red-400">{error.message}</p>
+            )}
         </div>
     )
 );

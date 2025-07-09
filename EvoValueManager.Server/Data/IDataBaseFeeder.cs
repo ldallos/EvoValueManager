@@ -3,5 +3,7 @@
     public interface IDatabaseSeeder
     {
         void SeedInitialData();
+        
+        void ResetDatabase();
     }
 }

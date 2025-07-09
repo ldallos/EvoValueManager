@@ -19,5 +19,7 @@
         public int Growth { get; set; } = 1;
         
         public int Care { get; set; } = 1;
+        
+        public List<ToolViewModel> AppliedTools { get; set; } = new List<ToolViewModel>();
     }
 }

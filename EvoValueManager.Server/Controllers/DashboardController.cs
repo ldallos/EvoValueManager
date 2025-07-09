@@ -27,5 +27,19 @@ namespace EvoCharacterManager.Controllers
                 return StatusCode(500, "An error occurred while calculating team stats.");
             }
         }
+        
+        [HttpGet("summary")]
+        public async Task<IActionResult> GetDashboardSummary()
+        {
+            try
+            {
+                var summary = await _dashboardService.GetDashboardSummary();
+                return Ok(summary);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while fetching dashboard summary.");
+            }
+        }
     }
 }

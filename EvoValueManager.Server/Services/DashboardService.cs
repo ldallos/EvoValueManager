@@ -1,23 +1,26 @@
 ﻿using EvoCharacterManager.Data;
 using EvoCharacterManager.Dto;
 using Microsoft.EntityFrameworkCore;
+using EvoValueManager.Models.Shared;
 
 namespace EvoCharacterManager.Services
 {
     public class DashboardService : IDashboardService
     {
         private readonly CharacterManagerContext _context;
+        private readonly ICharacterService _characterService;
 
-        public DashboardService(CharacterManagerContext context)
+        public DashboardService(CharacterManagerContext context, ICharacterService characterService)
         {
             _context = context;
+            _characterService = characterService;
         }
 
         public async Task<List<TeamStatViewModel>> GetAverageTeamStats()
         {
-            var characterCount = await _context.Characters.CountAsync();
+            var effectiveCharacters = await _characterService.GetEffectiveCharacters();
 
-            if (characterCount == 0)
+            if (effectiveCharacters.Count == 0)
             {
                 return new List<TeamStatViewModel>
                 {
@@ -29,11 +32,11 @@ namespace EvoCharacterManager.Services
                 };
             }
 
-            var averageBravery = await _context.Characters.AverageAsync(c => c.Bravery);
-            var averageTrust = await _context.Characters.AverageAsync(c => c.Trust);
-            var averagePresence = await _context.Characters.AverageAsync(c => c.Presence);
-            var averageGrowth = await _context.Characters.AverageAsync(c => c.Growth);
-            var averageCare = await _context.Characters.AverageAsync(c => c.Care);
+            var averageBravery = effectiveCharacters.Average(c => c.Bravery);
+            var averageTrust = effectiveCharacters.Average(c => c.Trust);
+            var averagePresence = effectiveCharacters.Average(c => c.Presence);
+            var averageGrowth = effectiveCharacters.Average(c => c.Growth);
+            var averageCare = effectiveCharacters.Average(c => c.Care);
 
             var teamStats = new List<TeamStatViewModel>
             {
@@ -45,6 +48,48 @@ namespace EvoCharacterManager.Services
             };
 
             return teamStats;
+        }
+        
+        public async Task<DashboardSummaryDto> GetDashboardSummary()
+        {
+            string inProgressState = Resources.ChallengeState_InProgress; 
+            var challengesInProgress = await _context.Managements
+                .CountAsync(m => !m.IsClosed && m.StateId == 2);
+
+            var mostEquippedToolQuery = await _context.CharacterTools
+                .GroupBy(ct => ct.Tool.Name)
+                .Select(g => new { ToolName = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .FirstOrDefaultAsync();
+            
+            var mostEquippedTool = mostEquippedToolQuery?.ToolName;
+
+            string completedState = Resources.ChallengeState_Completed;
+            var topContributorQuery = await _context.Managements
+                .Where(m => m.StateId == 3)
+                .GroupBy(m => m.CharacterId)
+                .Select(g => new { CharacterId = g.Key, CompletedCount = g.Count() })
+                .OrderByDescending(x => x.CompletedCount)
+                .FirstOrDefaultAsync();
+
+            string? topContributorName = "N/A";
+            if (topContributorName == null) throw new ArgumentNullException(nameof(topContributorName));
+            if (topContributorQuery == null)
+                return new DashboardSummaryDto
+                {
+                    ChallengesInProgress = challengesInProgress,
+                    MostEquippedTool = mostEquippedTool,
+                    TopContributor = topContributorName
+                };
+            var character = await _context.Characters.FindAsync(topContributorQuery.CharacterId);
+            topContributorName = character?.Name ?? "N/A";
+
+            return new DashboardSummaryDto
+            {
+                ChallengesInProgress = challengesInProgress,
+                MostEquippedTool = mostEquippedTool,
+                TopContributor = topContributorName
+            };
         }
     }
 }

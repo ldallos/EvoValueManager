@@ -15,7 +15,8 @@ namespace EvoCharacterManager.Controllers
         private readonly ILogger<CharacterController> _logger;
         private readonly CharacterManagerContext _context;
 
-        public CharacterController(ICharacterService service, ILogger<CharacterController> logger, CharacterManagerContext context)
+        public CharacterController(ICharacterService service, ILogger<CharacterController> logger,
+            CharacterManagerContext context)
         {
             _characterService = service;
             _logger = logger;
@@ -24,23 +25,64 @@ namespace EvoCharacterManager.Controllers
 
         // GET: api/Character
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CharacterViewModel>>> GetCharacters()
+        public async Task<ActionResult<IEnumerable<RichCharacterViewModel>>> GetCharacters()
         {
-            var characters = await _characterService.GetAllCharacters();
-            var viewModels = characters.Select(c => new CharacterViewModel
+            var characters = await _context.Characters
+                .AsNoTracking()
+                .Include(c => c.CharacterTools)
+                .ThenInclude(ct => ct.Tool)
+                .Include(c => c.CharacterAchievements)
+                .ThenInclude(ca => ca.Achievement)
+                .ToListAsync();
+
+            var viewModels = characters.Select(character =>
             {
-                Id = c.ID,
-                Name = c.Name,
-                Title = c.Title,
-                HasAvatar = c.AvatarImage != null,
-                Bravery = c.Bravery,
-                Trust = c.Trust,
-                Presence = c.Presence,
-                Growth = c.Growth,
-                Care = c.Care
+                var appliedTools = character.CharacterTools.Select(ct => ct.Tool!).ToList();
+                var earnedAchievements = character.CharacterAchievements.Select(ca => ca.Achievement!).ToList();
+
+                return new RichCharacterViewModel
+                {
+                    Id = character.ID,
+                    Name = character.Name,
+                    Title = character.Title,
+                    HasAvatar = character.AvatarImage != null,
+
+                    Bravery = new StatDetailViewModel
+                        { Base = character.Bravery, Bonus = appliedTools.Sum(t => t.BraveryBonus ?? 0) },
+                    Trust = new StatDetailViewModel
+                        { Base = character.Trust, Bonus = appliedTools.Sum(t => t.TrustBonus ?? 0) },
+                    Presence = new StatDetailViewModel
+                        { Base = character.Presence, Bonus = appliedTools.Sum(t => t.PresenceBonus ?? 0) },
+                    Growth = new StatDetailViewModel
+                        { Base = character.Growth, Bonus = appliedTools.Sum(t => t.GrowthBonus ?? 0) },
+                    Care = new StatDetailViewModel
+                        { Base = character.Care, Bonus = appliedTools.Sum(t => t.CareBonus ?? 0) },
+
+                    AppliedTools = appliedTools.Select(t => new ToolViewModel
+                    {
+                        Id = t.Id,
+                        Name = t.Name,
+                        Description = t.Description,
+                        BraveryBonus = t.BraveryBonus,
+                        TrustBonus = t.TrustBonus,
+                        PresenceBonus = t.PresenceBonus,
+                        GrowthBonus = t.GrowthBonus,
+                        CareBonus = t.CareBonus
+                    }).ToList(),
+
+                    Achievements = earnedAchievements.Select(ach => new AchievementViewModel
+                    {
+                        Id = ach.Id,
+                        Name = ach.Name,
+                        Description = ach.Description,
+                        IconType = ach.IconType
+                    }).ToList()
+                };
             }).ToList();
+
             return Ok(viewModels);
         }
+
 
         // GET: api/Character/5
         [HttpGet("{id}")]
@@ -91,12 +133,14 @@ namespace EvoCharacterManager.Controllers
             {
                 return NotFound();
             }
+
             return File(character.AvatarImage, character.AvatarImageType);
         }
 
         // POST: api/Character
         [HttpPost]
-        public async Task<ActionResult<CharacterViewModel>> PostCharacter([FromBody] CharacterViewModel characterViewModel)
+        public async Task<ActionResult<CharacterViewModel>> PostCharacter(
+            [FromBody] CharacterViewModel characterViewModel)
         {
             if (!ModelState.IsValid)
             {
@@ -134,30 +178,44 @@ namespace EvoCharacterManager.Controllers
 
         // PUT: api/Character/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCharacter(int id, [FromBody] CharacterViewModel characterViewModel)
+        public async Task<ActionResult<CharacterViewModel>> PutCharacter
+            (int id, [FromBody] CharacterViewModel characterViewModel)
         {
-             if (id != characterViewModel.Id)
-             {
-                 return BadRequest("ID mismatch.");
-             }
+            if (id != characterViewModel.Id)
+            {
+                return BadRequest("ID mismatch.");
+            }
 
-             var characterToUpdate = await _characterService.GetCharacterById(id);
-             if (characterToUpdate == null)
-             {
-                 return NotFound();
-             }
-            
-             characterToUpdate.Name = characterViewModel.Name;
-             characterToUpdate.Title = characterViewModel.Title;
-             characterToUpdate.Bravery = characterViewModel.Bravery;
-             characterToUpdate.Trust = characterViewModel.Trust;
-             characterToUpdate.Presence = characterViewModel.Presence;
-             characterToUpdate.Growth = characterViewModel.Growth;
-             characterToUpdate.Care = characterViewModel.Care;
+            var characterToUpdate = await _characterService.GetCharacterById(id);
+            if (characterToUpdate == null)
+            {
+                return NotFound();
+            }
 
-             await _characterService.SaveChanges();
+            characterToUpdate.Name = characterViewModel.Name;
+            characterToUpdate.Title = characterViewModel.Title;
+            characterToUpdate.Bravery = characterViewModel.Bravery;
+            characterToUpdate.Trust = characterViewModel.Trust;
+            characterToUpdate.Presence = characterViewModel.Presence;
+            characterToUpdate.Growth = characterViewModel.Growth;
+            characterToUpdate.Care = characterViewModel.Care;
 
-             return NoContent();
+            await _characterService.SaveChanges();
+
+            var updatedViewModel = new CharacterViewModel
+            {
+                Id = characterToUpdate.ID,
+                Name = characterToUpdate.Name,
+                Title = characterToUpdate.Title,
+                HasAvatar = characterToUpdate.AvatarImage != null,
+                Bravery = characterToUpdate.Bravery,
+                Trust = characterToUpdate.Trust,
+                Presence = characterToUpdate.Presence,
+                Growth = characterToUpdate.Growth,
+                Care = characterToUpdate.Care
+            };
+
+            return Ok(updatedViewModel);
         }
 
 
@@ -177,9 +235,24 @@ namespace EvoCharacterManager.Controllers
                 character.AvatarImage = memoryStream.ToArray();
                 character.AvatarImageType = file.ContentType;
             }
+
             await _characterService.SaveChanges();
             _logger.LogInformation($"Avatar updated for character ID {id}");
             return Ok(new { message = "Avatar updated successfully." });
+        }
+
+        // DELETE: api/Character/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCharacter(int id)
+        {
+            var character = await _characterService.GetCharacterById(id);
+            if (character == null)
+            {
+                return NotFound();
+            }
+
+            await _characterService.DeleteCharacterAsync(id);
+            return NoContent();
         }
     }
 }

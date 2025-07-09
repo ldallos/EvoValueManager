@@ -28,5 +28,8 @@ namespace EvoCharacterManager.Models.Entities
         [Column("growth")] public int Growth { get; set; } = 0;
 
         [Column("care")] public int Care { get; set; } = 0;
+        
+        public ICollection<CharacterTool> CharacterTools { get; set; } = new List<CharacterTool>();
+        public ICollection<CharacterAchievement> CharacterAchievements { get; set; } = new List<CharacterAchievement>();
     }
 }

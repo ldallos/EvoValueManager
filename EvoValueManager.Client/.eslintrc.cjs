@@ -12,11 +12,7 @@
     ],
     ignorePatterns: ["dist", ".eslintrc.cjs", "node_modules"],
     parser: "@typescript-eslint/parser",
-    settings: {
-        react: {
-            version: "detect",
-        },
-    },
+    settings: { react: { version: "detect" } },
     rules: {
         "react/prop-types": "off",
         "@typescript-eslint/no-explicit-any": "warn",
@@ -37,7 +33,11 @@
             },
         },
         {
-            files: ["vite.config.ts", "tailwind.config.js", "postcss.config.js"],
+            files: [
+                "vite.config.ts",
+                "tailwind.config.js",
+                "postcss.config.js",
+            ],
             extends: ["plugin:@typescript-eslint/recommended-type-checked"],
             parserOptions: {
                 ecmaVersion: "latest",

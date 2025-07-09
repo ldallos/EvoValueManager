@@ -1,10 +1,9 @@
-﻿import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronsDown } from 'lucide-react';
-import Button from './Button';
-import { useTranslation } from 'react-i18next';
+﻿import { motion, Variants } from "framer-motion";
+import { ArrowRight, ChevronsDown } from "lucide-react";
+import Button from "./Button";
+import { useTranslation } from "react-i18next";
 
-const fadeIn_variants = {
+const fadeIn_variants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: (i: number) => ({
         opacity: 1,
@@ -22,16 +21,23 @@ export default function HeroSection() {
 
     return (
         <section className="flex items-center justify-center text-center min-h-[calc(100vh-4rem)] -mt-10 px-4 sm:px-6 lg:px-8">
-
-            {/* Background Gradient */}
             <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-900/40" />
+
+            <motion.img
+                src="https://images.pexels.com/photos/1252890/pexels-photo-1252890.jpeg"
+                alt="Abstract network background"
+                className="absolute inset-0 w-full h-full object-cover z-0 opacity-20"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.2 }}
+                transition={{ duration: 1.5, ease: "easeInOut" }}
+            />
 
             <div
                 className="absolute inset-0 -z-10 opacity-[0.03]"
                 style={{
                     backgroundImage:
-                        'radial-gradient(var(--color-slate-700) 1px, transparent 1px)',
-                    backgroundSize: '16px 16px',
+                        "radial-gradient(var(--color-slate-700) 1px, transparent 1px)",
+                    backgroundSize: "16px 16px",
                 }}
             />
 
@@ -43,7 +49,8 @@ export default function HeroSection() {
                     variants={fadeIn_variants}
                     className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl"
                 >
-                    <span className="text-indigo-400">Evo</span>ValueManager
+                    <span className="text-indigo-400">Evo</span>
+                    ValueManager
                 </motion.h1>
 
                 <motion.p
@@ -53,7 +60,7 @@ export default function HeroSection() {
                     variants={fadeIn_variants}
                     className="mt-6 text-lg leading-8 text-slate-300 max-w-2xl mx-auto"
                 >
-                    {t('heroSubtitle', 'A modern platform to visualize growth, manage challenges, and evolve the core values of your team.')}
+                    {t("home.heroSubtitle")}
                 </motion.p>
 
                 <motion.div
@@ -63,14 +70,17 @@ export default function HeroSection() {
                     variants={fadeIn_variants}
                     className="mt-10"
                 >
-                    <Button as={Link} to="/dashboard" variant="primary" className="px-8 py-3 text-lg font-semibold">
-                        View Dashboard
+                    <Button
+                        to="/dashboard"
+                        variant="primary"
+                        className="px-8 py-3 text-lg font-semibold"
+                    >
+                        {t("home.viewDashboard")}
                         <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                 </motion.div>
             </div>
 
-            {/* Animated Scroll Down Indicator */}
             <motion.a
                 custom={3}
                 initial="hidden"
@@ -82,7 +92,11 @@ export default function HeroSection() {
             >
                 <motion.div
                     animate={{ y: [0, 8, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                    transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                    }}
                 >
                     <ChevronsDown className="w-8 h-8" />
                 </motion.div>
@@ -90,4 +104,3 @@ export default function HeroSection() {
         </section>
     );
 }
-

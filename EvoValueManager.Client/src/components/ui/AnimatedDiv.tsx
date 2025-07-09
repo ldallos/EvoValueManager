@@ -1,5 +1,5 @@
-﻿import { motion, Variants } from 'framer-motion';
-import React from 'react';
+﻿import { motion, Variants } from "framer-motion";
+import React from "react";
 
 interface AnimatedDivProps {
     children: React.ReactNode;
@@ -16,7 +16,7 @@ const cardVariants: Variants = {
         y: 0,
         opacity: 1,
         transition: {
-            type: 'spring',
+            type: "spring",
             bounce: 0.4,
             duration: 0.8,
             delay: delay * 0.1,
@@ -24,7 +24,11 @@ const cardVariants: Variants = {
     }),
 };
 
-export default function AnimatedDiv({ children, className, delay = 0 }: AnimatedDivProps) {
+export default function AnimatedDiv({
+    children,
+    className,
+    delay = 0,
+}: AnimatedDivProps) {
     return (
         <motion.div
             className={className}

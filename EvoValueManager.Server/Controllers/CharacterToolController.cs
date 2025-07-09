@@ -1,6 +1,9 @@
-﻿using EvoCharacterManager.Services;
+﻿using EvoCharacterManager.Data;
+using EvoCharacterManager.Models.Entities;
+using EvoCharacterManager.Services;
 using EvoCharacterManager.Models.ViewModels; 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EvoCharacterManager.Controllers
 {
@@ -9,23 +12,26 @@ namespace EvoCharacterManager.Controllers
     public class CharacterToolController : ControllerBase
     {
         private readonly ICharacterToolService _characterToolService;
-        private readonly IToolService _toolService; 
-        private readonly ICharacterService _characterService; 
+        private readonly IToolService _toolService;
+        private readonly ICharacterService _characterService;
+        private readonly CharacterManagerContext _context;
 
-        public CharacterToolController(ICharacterToolService characterToolService, IToolService toolService, ICharacterService characterService)
+        public CharacterToolController(
+            ICharacterToolService characterToolService,
+            IToolService toolService,
+            ICharacterService characterService,
+            CharacterManagerContext context)
         {
             _characterToolService = characterToolService;
             _toolService = toolService;
             _characterService = characterService;
+            _context = context;
         }
 
         // GET api/charactertool/{characterId}/assigned
         [HttpGet("{characterId}/assigned")]
         public async Task<ActionResult<IEnumerable<ToolViewModel>>> GetAssignedTools(int characterId)
         {
-            var character = await _characterService.GetCharacterById(characterId);
-            if (character == null) return NotFound("Character not found.");
-
             var tools = await _characterToolService.GetAssignedToolsForCharacterAsync(characterId);
             var viewModels = tools.Select(t => new ToolViewModel
             {
@@ -44,23 +50,33 @@ namespace EvoCharacterManager.Controllers
         [HttpGet("{characterId}/available")]
         public async Task<ActionResult<IEnumerable<ToolViewModel>>> GetAvailableToolsForCharacter(int characterId)
         {
-            var character = await _characterService.GetCharacterById(characterId);
-            if (character == null) return NotFound("Character not found.");
+            var assignedToolIdsQuery = _context.CharacterTools
+                .Where(ct => ct.CharacterId == characterId)
+                .Select(ct => ct.ToolId);
 
-            var allTools = await _toolService.GetAllTools();
-            var assignedTools = await _characterToolService.GetAssignedToolsForCharacterAsync(characterId);
-            var assignedToolIds = assignedTools.Select(t => t.Id).ToHashSet();
-
-            var availableTools = allTools
-                .Where(t => !assignedToolIds.Contains(t.Id))
-                .Select(t => new ToolViewModel { 
-                    Id = t.Id, Name = t.Name, Description = t.Description,
-                    BraveryBonus = t.BraveryBonus, TrustBonus = t.TrustBonus,
-                    PresenceBonus = t.PresenceBonus, GrowthBonus = t.GrowthBonus, CareBonus = t.CareBonus
+            var availableTools = await _context.Tools
+                .Where(t => !assignedToolIdsQuery.Contains(t.Id))
+                .Select(t => new ToolViewModel
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    Description = t.Description,
+                    BraveryBonus = t.BraveryBonus,
+                    TrustBonus = t.TrustBonus,
+                    PresenceBonus = t.PresenceBonus,
+                    GrowthBonus = t.GrowthBonus,
+                    CareBonus = t.CareBonus
                 })
-                .ToList();
-            
+                .ToListAsync();
+
             return Ok(availableTools);
+        }
+        
+        // GET api/charactertool/all-assignments
+        [HttpGet("all-assignments")]
+        public async Task<ActionResult<IEnumerable<CharacterTool>>> GetAllAssignments()
+        {
+            return Ok(await _characterToolService.GetAllAssignmentsAsync());
         }
 
         // POST api/charactertool/{characterId}/assign/{toolId}

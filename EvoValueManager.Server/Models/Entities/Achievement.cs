@@ -6,7 +6,7 @@ namespace EvoCharacterManager.Models.Entities
     {
         [Column("id")]
         public int Id { get; set; }
-
+        
         [Column("name")]
         public string Name { get; set; } = string.Empty;
 

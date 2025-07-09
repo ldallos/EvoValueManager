@@ -9,6 +9,8 @@ namespace EvoCharacterManager.Services
         Task<Challenge?> GetChallengeById(int id);
 
         Task SaveNewChallenge(Challenge challenge);
+        
+        Task DeleteChallengeAsync(int id);
 
         Task SaveChanges();
     }

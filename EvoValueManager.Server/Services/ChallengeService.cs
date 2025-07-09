@@ -9,7 +9,6 @@ namespace EvoCharacterManager.Services
         public ChallengeService(CharacterManagerContext context)
         {
             myContext = context;
-            context.Database.EnsureCreated();
         }
 
         public async Task<List<Challenge>> GetAllChallenges()
@@ -25,6 +24,16 @@ namespace EvoCharacterManager.Services
         {
             await myContext.Challenges.AddAsync(challenge);
             await myContext.SaveChangesAsync();
+        }
+        
+        public async Task DeleteChallengeAsync(int id)
+        {
+            var challenge = await myContext.Challenges.FindAsync(id);
+            if (challenge != null)
+            {
+                myContext.Challenges.Remove(challenge);
+                await myContext.SaveChangesAsync();
+            }
         }
 
         public async Task SaveChanges()

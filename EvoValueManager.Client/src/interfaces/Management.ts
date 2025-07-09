@@ -7,6 +7,7 @@
 }
 
 export interface ManagementDetails {
+    stateId: number;
     state: string;
     details?: string | null;
     isClosed: boolean;

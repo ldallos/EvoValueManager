@@ -1,69 +1,82 @@
-﻿import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { User, PlusCircle } from "lucide-react";
-import * as api from "../api/api";
-import { Character } from "../interfaces/Character";
-import CharacterGrid from "../components/CharacterGrid";
-import CharacterDashboard from "../components/CharacterDashboard";
-import Card from "../components/ui/Card";
-import Button from "../components/ui/Button";
-import PageHeader from "../components/ui/PageHeader";
-import CreateCharacterModal from "../components/CreateCharacterModal";
+﻿import { useState, useEffect, useMemo } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { User } from "lucide-react";
+import CharacterGrid from "@/components/character/CharacterGrid.tsx";
+import CharacterDashboard from "@/components/character/CharacterDashboard.tsx";
+import Card from "@/components/ui/Card.tsx";
+import PageHeader from "@/components/ui/PageHeader.tsx";
+import { useCharacterData } from "@/hooks/useCharacterData.ts";
+import { useTranslation } from "react-i18next";
+import ToolManagementModal from "@/components/tool/ToolManagementModal.tsx";
+import ChallengeManagementModal from "@/components/challenge/ChallengeManagementModal.tsx";
 
 function TeamPage() {
-    const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
-    const [isCreateModalOpen, setCreateModalOpen] = useState(false);
+    const [selectedCharacterId, setSelectedCharacterId] = useState<
+        number | null
+    >(null);
+    const [isToolModalOpen, setToolModalOpen] = useState(false);
+    const [isChallengeModalOpen, setChallengeModalOpen] = useState(false);
 
     const {
-        data: characters = [],
+        baseCharacters,
+        effectiveCharacters,
+        toolsByCharacterId,
         isLoading,
-        error,
-    } = useQuery<Character[], Error>({
-        queryKey: ["characters"],
-        queryFn: api.getCharacters,
-        staleTime: 1000 * 60 * 5,
-    });
+    } = useCharacterData();
+    const location = useLocation();
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const charIdFromUrl = params.get("characterId");
+
+        if (charIdFromUrl) {
+            const characterId = parseInt(charIdFromUrl, 10);
+            if (effectiveCharacters.some((c) => c.id === characterId)) {
+                setSelectedCharacterId(characterId);
+            }
+        }
+    }, [location.search, effectiveCharacters]);
+
+    const selectedBaseCharacter = useMemo(() => {
+        if (!selectedCharacterId) return null;
+        return baseCharacters.find((c) => c.id === selectedCharacterId) || null;
+    }, [selectedCharacterId, baseCharacters]);
 
     const handleSelectCharacter = (id: number) => {
-        setSelectedCharacterId((prevId) => (prevId === id ? null : id));
+        setSelectedCharacterId(id);
     };
 
-    if (error) {
-        return (
-            <div className="text-center text-red-400 p-10">
-                Error loading team members: {error.message}
-            </div>
-        );
-    }
+    const { t } = useTranslation();
 
     return (
         <>
             <PageHeader
-                title="Team Members"
-                description="Select a team member to view their profile, manage tools, and assign challenges."
+                title={t("team.title")}
+                description={t("team.description")}
             />
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-5 xl:col-span-4">
-                    {!isLoading && characters.length === 0 ? (
+                <div className="lg:col-span-4 xl:col-span-3">
+                    {!isLoading && effectiveCharacters.length === 0 ? (
                         <Card className="p-10 flex flex-col items-center justify-center text-center h-full min-h-[600px]">
                             <h3 className="text-xl font-semibold text-white">
-                                No Team Members Found
+                                {t("team.noMembersFound")}
                             </h3>
-                            <p className="text-slate-400 mt-1">
-                                Get started by adding a new team member.
+                            <p className="text-slate-400 mt-2">
+                                {t("team.goTo")}{" "}
+                                <Link
+                                    to="/library/team"
+                                    className="font-semibold text-indigo-400 hover:underline"
+                                >
+                                    {t("team.libraryLink")}
+                                </Link>{" "}
+                                {t("team.toAddNewMember")}
                             </p>
-                            <Button
-                                variant="primary"
-                                className="mt-4"
-                                onClick={() => setCreateModalOpen(true)}
-                            >
-                                <PlusCircle className="w-5 h-5 mr-2" />
-                                Add Member
-                            </Button>
                         </Card>
                     ) : (
                         <CharacterGrid
-                            characters={characters}
+                            baseCharacters={baseCharacters}
+                            effectiveCharacters={effectiveCharacters}
+                            toolsByCharacterId={toolsByCharacterId}
                             isLoading={isLoading}
                             selectedCharacterId={selectedCharacterId}
                             onCharacterSelect={handleSelectCharacter}
@@ -71,29 +84,45 @@ function TeamPage() {
                     )}
                 </div>
 
-                <div className="lg:col-span-7 xl:col-span-8">
-                    {selectedCharacterId ? (
+                <div className="lg:col-span-8 xl:col-span-9">
+                    {selectedCharacterId && selectedBaseCharacter ? (
                         <CharacterDashboard
                             key={selectedCharacterId}
                             characterId={selectedCharacterId}
+                            initialBaseCharacter={selectedBaseCharacter}
+                            onOpenToolModal={() => setToolModalOpen(true)}
+                            onOpenChallengeModal={() =>
+                                setChallengeModalOpen(true)
+                            }
                         />
                     ) : (
-                        <Card className="p-10 flex flex-col items-center justify-center text-center h-full min-h-[600px] border-2 border-dashed border-slate-700 bg-slate-800/30">
+                        <Card className="p-10 flex flex-col items-center justify-center text-center h-auto min-h-[600px] border-2 border-dashed border-slate-700 bg-slate-800/30">
                             <User className="w-16 h-16 text-slate-500 mb-4" />
                             <h3 className="text-2xl font-semibold text-white">
-                                Select a Team Member
+                                {t("team.selectMemberPromptTitle")}
                             </h3>
                             <p className="text-slate-400 mt-2 max-w-sm">
-                                Their complete profile and management tools will appear here.
+                                {t("team.selectMemberPromptDescription")}
                             </p>
                         </Card>
                     )}
                 </div>
             </div>
-            <CreateCharacterModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setCreateModalOpen(false)}
-            />
+
+            {selectedBaseCharacter && (
+                <>
+                    <ToolManagementModal
+                        isOpen={isToolModalOpen}
+                        onClose={() => setToolModalOpen(false)}
+                        character={selectedBaseCharacter}
+                    />
+                    <ChallengeManagementModal
+                        isOpen={isChallengeModalOpen}
+                        onClose={() => setChallengeModalOpen(false)}
+                        character={selectedBaseCharacter}
+                    />
+                </>
+            )}
         </>
     );
 }

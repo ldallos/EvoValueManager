@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using EvoCharacterManager.Data;
 using EvoCharacterManager.Helpers;
+using EvoCharacterManager.Middleware;
 using EvoCharacterManager.Services;
 using Microsoft.Extensions.FileProviders;
 
@@ -28,7 +29,17 @@ namespace EvoCharacterManager
                 seeder.SeedInitialData();
             }
 
-            ConfigureMiddleware(app, builder);
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "../EvoValueManager.Client/dist")),
+            });
+            
+            app.UseMiddleware<LocalizationMiddleware>();
+
+            app.UseRouting();
+            app.UseAuthorization();
+            app.MapFallbackToFile("index.html");
+            
             ConfigureEndpoints(app);
 
             app.Run();

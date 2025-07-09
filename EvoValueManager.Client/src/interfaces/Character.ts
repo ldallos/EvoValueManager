@@ -1,4 +1,5 @@
 ﻿import { Achievement } from "./Achievement";
+import { Tool } from "@/interfaces/Tool.ts";
 
 export interface Character {
     id: number;
@@ -11,4 +12,5 @@ export interface Character {
     presence: number;
     growth: number;
     care: number;
+    appliedTools: Tool[];
 }

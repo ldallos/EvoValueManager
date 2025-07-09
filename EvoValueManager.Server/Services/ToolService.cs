@@ -11,7 +11,6 @@ namespace EvoCharacterManager.Services
         public ToolService(CharacterManagerContext context)
         {
             _context = context;
-            _context.Database.EnsureCreated(); 
         }
 
         public async Task<List<Tool>> GetAllTools()
@@ -29,6 +28,16 @@ namespace EvoCharacterManager.Services
             _context.Tools.Add(tool);
             await _context.SaveChangesAsync();
             return tool; 
+        }
+        
+        public async Task DeleteToolAsync(int id)
+        {
+            var tool = await _context.Tools.FindAsync(id);
+            if (tool != null)
+            {
+                _context.Tools.Remove(tool);
+                await _context.SaveChangesAsync();
+            }
         }
         
         public async Task SaveChanges()

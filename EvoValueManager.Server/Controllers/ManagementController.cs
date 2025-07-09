@@ -18,17 +18,20 @@ namespace EvoCharacterManager.Controllers
         private readonly ICharacterService _characterService;
         private readonly IChallengeService _challengeService;
         private readonly CharacterManagerContext  _context;
+        private readonly ICharacterToolService _characterToolService;
 
         public ManagementController(
             IManagementService managementService,
             ICharacterService characterService,
             IChallengeService challengeService,
-            CharacterManagerContext context)
+            CharacterManagerContext context,
+            ICharacterToolService characterToolService)
         {
             _managementService = managementService;
             _characterService = characterService;
             _challengeService = challengeService;
             _context = context;
+            _characterToolService = characterToolService;
         }
 
         private string GetStateTextFromId(int stateId)
@@ -52,12 +55,10 @@ namespace EvoCharacterManager.Controllers
             if (character == null) return NotFound("Character not found.");
 
             var allChallenges = await _challengeService.GetAllChallenges();
-            var assignedChallenges = await _managementService.GetAssignedChallenges(characterId);
-            var closedChallenges = await _managementService.GetClosedChallenges(characterId);
-
-            var assignedOrClosedIds = assignedChallenges.Select(c => c.ID)
-                .Union(closedChallenges.Select(c => c.ID))
-                .ToHashSet();
+            var assignedOrClosedIds = await _context.Managements
+                .Where(m => m.CharacterId == characterId)
+                .Select(m => m.ChallengeId)
+                .ToHashSetAsync();
 
             var available = allChallenges
                 .Where(c => !assignedOrClosedIds.Contains(c.ID))
@@ -85,9 +86,6 @@ namespace EvoCharacterManager.Controllers
         [HttpGet("assigned/{characterId}")]
         public async Task<ActionResult<IEnumerable<ChallengeViewModel>>> GetAssignedChallenges(int characterId)
         {
-            var character = await _characterService.GetCharacterById(characterId);
-            if (character == null) return NotFound("Character not found.");
-
             var assigned = await _managementService.GetAssignedChallenges(characterId);
 
             var viewModels = assigned.Select(c => new ChallengeViewModel
@@ -106,7 +104,6 @@ namespace EvoCharacterManager.Controllers
                 GainableCare = c.GainableCare
             }).ToList();
 
-
             return Ok(viewModels);
         }
 
@@ -123,12 +120,27 @@ namespace EvoCharacterManager.Controllers
 
             var detailsViewModel = new ManagementDetailsViewModel
             {
-                State = management.State,
+                StateId = management.StateId,
+                State = GetStateTextFromId(management.StateId),
                 Details = management.Details,
                 IsClosed = management.IsClosed
             };
 
             return Ok(detailsViewModel);
+        }
+        
+        [HttpGet("states")]
+        public ActionResult<IEnumerable<ChallengeStateDto>> GetChallengeStates()
+        {
+            var states = new List<ChallengeStateDto>
+            {
+                new() { Id = 1, Name = Resources.ChallengeState_New },
+                new() { Id = 2, Name = Resources.ChallengeState_InProgress },
+                new() { Id = 3, Name = Resources.ChallengeState_Completed },
+                new() { Id = 4, Name = Resources.ChallengeState_Suspended },
+                new() { Id = 5, Name = Resources.ChallengeState_Cancelled },
+            };
+            return Ok(states);
         }
 
         // POST: api/Management
@@ -154,16 +166,30 @@ namespace EvoCharacterManager.Controllers
                 return BadRequest("This challenge was previously completed/closed by this character.");
             }
 
+            var assignedTools = await _characterToolService.GetAssignedToolsForCharacterAsync(character.ID);
 
+            var effectiveBravery = 
+                character.Bravery + assignedTools.Sum(t => t.BraveryBonus ?? 0);
+            var effectiveTrust = 
+                character.Trust + assignedTools.Sum(t => t.TrustBonus ?? 0);
+            var effectivePresence = 
+                character.Presence + assignedTools.Sum(t => t.PresenceBonus ?? 0);
+            var effectiveGrowth = 
+                character.Growth + assignedTools.Sum(t => t.GrowthBonus ?? 0);
+            var effectiveCare = 
+                character.Care + assignedTools.Sum(t => t.CareBonus ?? 0);
+    
             var insufficientStats = new List<string>();
-            if (!IsStatSufficient(character.Growth, challenge.RequiredGrowth))
+    
+            if (!IsStatSufficient(effectiveGrowth, challenge.RequiredGrowth))
                 insufficientStats.Add(Resources.Value_Growth);
-            if (!IsStatSufficient(character.Care, challenge.RequiredCare)) insufficientStats.Add(Resources.Value_Care);
-            if (!IsStatSufficient(character.Presence, challenge.RequiredPresence))
+            if (!IsStatSufficient(effectiveCare, challenge.RequiredCare)) 
+                insufficientStats.Add(Resources.Value_Care);
+            if (!IsStatSufficient(effectivePresence, challenge.RequiredPresence))
                 insufficientStats.Add(Resources.Value_Presence);
-            if (!IsStatSufficient(character.Bravery, challenge.RequiredBravery))
+            if (!IsStatSufficient(effectiveBravery, challenge.RequiredBravery))
                 insufficientStats.Add(Resources.Value_Bravery);
-            if (!IsStatSufficient(character.Trust, challenge.RequiredTrust))
+            if (!IsStatSufficient(effectiveTrust, challenge.RequiredTrust))
                 insufficientStats.Add(Resources.Value_Trust);
 
             if (insufficientStats.Count > 0)
@@ -230,23 +256,24 @@ namespace EvoCharacterManager.Controllers
                 return BadRequest("Challenge assignment is already closed.");
             }
 
-            string completedStateText = GetStateTextFromId(3);
-            if (management.State != completedStateText)
+            if (management.StateId != 3)
             {
-                return BadRequest($"Challenge must be in '{completedStateText}' state to close and gain stats.");
+                return BadRequest($"Challenge must be in '{Resources.ChallengeState_Completed}' state to close and gain stats.");
             }
 
             try
             {
-                character.Bravery += challenge.GainableBravery ?? 0;
-                character.Trust += challenge.GainableTrust ?? 0;
-                character.Presence += challenge.GainablePresence ?? 0;
-                character.Growth += challenge.GainableGrowth ?? 0;
-                character.Care += challenge.GainableCare ?? 0;
+                character.Bravery = Math.Min(100, character.Bravery + (challenge.GainableBravery ?? 0));
+                character.Trust = Math.Min(100, character.Trust + (challenge.GainableTrust ?? 0));
+                character.Presence = Math.Min(100, character.Presence + (challenge.GainablePresence ?? 0));
+                character.Growth = Math.Min(100, character.Growth + (challenge.GainableGrowth ?? 0));
+                character.Care = Math.Min(100, character.Care + (challenge.GainableCare ?? 0));
 
                 management.IsClosed = true;
-                
+
                 await GrantAchievements(character);
+    
+                await _context.SaveChangesAsync();
 
                 var updatedCharacterViewModel = new CharacterViewModel
                 {

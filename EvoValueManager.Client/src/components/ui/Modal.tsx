@@ -1,18 +1,46 @@
-﻿import { Fragment } from "react";
+﻿import React, { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { X } from "lucide-react";
+import { cn } from "@/utils/cn.ts";
+
+type ModalSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
 
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
     title: string;
     children: React.ReactNode;
+    size?: ModalSize;
 }
 
-export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
+const sizeClasses: Record<ModalSize, string> = {
+    sm: "sm:max-w-sm",
+    md: "sm:max-w-md",
+    lg: "sm:max-w-lg",
+    xl: "sm:max-w-xl",
+    "2xl": "sm:max-w-2xl",
+    "3xl": "sm:max-w-3xl",
+    "4xl": "sm:max-w-4xl",
+    "5xl": "sm:max-w-5xl",
+};
+
+export default function Modal({
+    isOpen,
+    onClose,
+    title,
+    children,
+    size = "2xl",
+}: ModalProps) {
     return (
-        <Transition.Root show={isOpen} as={Fragment}>
-            <Dialog as="div" className="relative z-50" onClose={onClose}>
+        <Transition.Root
+            show={isOpen}
+            as={Fragment}
+        >
+            <Dialog
+                as="div"
+                className="relative z-50"
+                onClose={onClose}
+            >
                 <Transition.Child
                     as={Fragment}
                     enter="ease-out duration-300"
@@ -36,9 +64,17 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
                             leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                         >
-                            <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-slate-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-slate-700">
+                            <Dialog.Panel
+                                className={cn(
+                                    "relative transform overflow-hidden rounded-lg bg-slate-800 text-left shadow-xl transition-all sm:my-8 sm:w-full border border-slate-700",
+                                    sizeClasses[size]
+                                )}
+                            >
                                 <div className="flex items-center justify-between border-b border-slate-700 p-4">
-                                    <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-white">
+                                    <Dialog.Title
+                                        as="h3"
+                                        className="text-lg font-semibold leading-6 text-white"
+                                    >
                                         {title}
                                     </Dialog.Title>
                                     <button
@@ -46,12 +82,13 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
                                         className="rounded-md p-1 text-slate-400 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         onClick={onClose}
                                     >
-                                        <X className="h-6 w-6" aria-hidden="true" />
+                                        <X
+                                            className="h-6 w-6"
+                                            aria-hidden="true"
+                                        />
                                     </button>
                                 </div>
-                                <div className="p-6">
-                                    {children}
-                                </div>
+                                <div className="p-6">{children}</div>
                             </Dialog.Panel>
                         </Transition.Child>
                     </div>

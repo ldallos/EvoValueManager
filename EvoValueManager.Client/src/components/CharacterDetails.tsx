@@ -12,7 +12,9 @@ interface CharacterDetailsProps {
 function CharacterDetails({ character }: CharacterDetailsProps) {
     const { t } = useTranslation();
 
-    const { data: assignedTools = [], isLoading: isLoadingTools } = useQuery<Tool[]>({
+    const { data: assignedTools = [], isLoading: isLoadingTools } = useQuery<
+        Tool[]
+    >({
         queryKey: ["assignedTools", character.id],
         queryFn: () => api.getAssignedToolsForCharacter(character.id),
         enabled: !!character,
@@ -33,8 +35,12 @@ function CharacterDetails({ character }: CharacterDetailsProps) {
                 </h4>
                 <div className="space-y-3">
                     {TRAITS.map((trait) => {
-                        const baseStat = character[trait.property as keyof Character] as number;
-                        const bonus = calculateTotalBonus(`${trait.property}Bonus` as keyof Tool);
+                        const baseStat = character[
+                            trait.property as keyof Character
+                        ] as number;
+                        const bonus = calculateTotalBonus(
+                            `${trait.property}Bonus` as keyof Tool
+                        );
                         const effectiveStat = baseStat + bonus;
 
                         return (
@@ -68,7 +74,9 @@ function CharacterDetails({ character }: CharacterDetailsProps) {
                     {t("assignedToolsTitle")}:
                 </h4>
                 {isLoadingTools ? (
-                    <p className="text-sm text-gray-500">{t("loadingToolsForCharacter")}</p>
+                    <p className="text-sm text-gray-500">
+                        {t("loadingToolsForCharacter")}
+                    </p>
                 ) : (
                     <>
                         {assignedTools.length > 0 ? (
