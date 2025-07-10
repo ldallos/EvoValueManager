@@ -9,6 +9,7 @@ import AvailableChallenges from "./AvailableChallenges";
 import AssignedChallenges from "./AssignedChallenges";
 import ChallengeDetailView from "./ChallengeDetailView";
 import { ChallengeState } from "@/api/api.ts";
+import {useTranslation} from "react-i18next";
 
 type State = {
     selectedChallengeId: number | null;
@@ -74,6 +75,8 @@ export default function ManagementDashboard({
     characterId,
     character,
 }: ManagementDashboardProps) {
+    const { t } = useTranslation();
+    
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const { data: availableChallenges = [], isLoading: isLoadingAvailable } =
@@ -101,7 +104,7 @@ export default function ManagementDashboard({
         return (
             <div className="flex items-center justify-center p-8">
                 <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                <span>Loading Challenge Data...</span>
+                <span>{t("challenge.loading")}</span>
             </div>
         );
     }

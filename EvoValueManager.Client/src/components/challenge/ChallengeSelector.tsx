@@ -40,7 +40,7 @@ function ChallengeSelector({
                     key={chal.id}
                     value={chal.id}
                 >
-                    {chal.title}
+                    {t(chal.title)}
                 </option>
             ))}
         </Select>

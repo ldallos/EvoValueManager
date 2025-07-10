@@ -167,7 +167,7 @@
     "tool": {
         "loading": "Eszköz adatok betöltése...",
         "managementTitle": "Eszközkezelés",
-        "equippedTitle": "Hozzárendelt",
+        "equippedTitle": "Eszközök",
         "availableTitle": "Elérhető",
         "statPreviewTitle": "Statisztika előnézet",
         "statPreviewPlaceholder": "Vidd az egeret egy elérhető eszköz fölé a bónusz megtekintéséhez.",

@@ -1,5 +1,4 @@
-﻿import { memo } from "react";
-import { Character } from "@/interfaces/Character.ts";
+﻿import { Character } from "@/interfaces/Character.ts";
 import { cn } from "@/utils/cn.ts";
 import { User } from "lucide-react";
 import CompactStatDisplay from "./CompactStatDisplay.tsx";
@@ -75,4 +74,4 @@ function CharacterCard({
     );
 }
 
-export default memo(CharacterCard);
+export default CharacterCard;

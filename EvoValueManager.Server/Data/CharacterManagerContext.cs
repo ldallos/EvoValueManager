@@ -34,7 +34,7 @@ namespace EvoCharacterManager.Data
                 .OnDelete(DeleteBehavior.Cascade); 
             modelBuilder.Entity<CharacterTool>()
                 .HasOne(ct => ct.Character)
-                .WithMany()
+                .WithMany(c => c.CharacterTools)
                 .HasForeignKey(ct => ct.CharacterId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<CharacterTool>()
@@ -47,7 +47,7 @@ namespace EvoCharacterManager.Data
                 .IsUnique();
             modelBuilder.Entity<CharacterAchievement>()
                 .HasOne(ca => ca.Character)
-                .WithMany()
+                .WithMany(c => c.CharacterAchievements)
                 .HasForeignKey(ca => ca.CharacterId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<CharacterAchievement>()

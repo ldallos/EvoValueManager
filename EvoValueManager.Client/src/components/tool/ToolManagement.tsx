@@ -11,12 +11,12 @@ import StatIcon from "@/components/shared/StatIcon.tsx";
 import { STAT_NAMES, StatName } from "@/components/shared/stat-types.ts";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn.ts";
+import { useCharacterData } from "@/hooks/useCharacterData";
 
 const FIVE_MINUTES_IN_MS = 1000 * 60 * 5;
 
 interface ToolManagementProps {
     characterId: number;
-    baseCharacter: Character;
 }
 
 const BonusStat = ({
@@ -42,10 +42,18 @@ const BonusStat = ({
     );
 };
 
-function ToolManagement({ characterId, baseCharacter }: ToolManagementProps) {
+function ToolManagement({ characterId }: ToolManagementProps) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [hoveredToolId, setHoveredToolId] = useState<number | null>(null);
+
+    const { baseCharacters, isLoading: isLoadingCharacters } =
+        useCharacterData();
+
+    const baseCharacter = useMemo(
+        () => baseCharacters.find((c) => c.id === characterId),
+        [baseCharacters, characterId]
+    );
 
     const { data: assignedTools = [], isLoading: isLoadingAssigned } = useQuery<
         Tool[]
@@ -98,18 +106,37 @@ function ToolManagement({ characterId, baseCharacter }: ToolManagementProps) {
     });
 
     const currentCharacterStats = useMemo(() => {
+        if (!baseCharacter) {
+            const emptyStats: Character = {
+                id: 0,
+                name: "",
+                hasAvatar: false,
+                bravery: 0,
+                trust: 0,
+                presence: 0,
+                growth: 0,
+                care: 0,
+                achievements: [],
+                appliedTools: [],
+            };
+            STAT_NAMES.forEach((statName) => {
+                emptyStats[statName] = 0;
+            });
+            return emptyStats;
+        }
         const stats: Character = { ...baseCharacter };
         assignedTools.forEach((tool) => {
             STAT_NAMES.forEach((statName) => {
                 const bonus =
                     (tool[`${statName}Bonus` as keyof Tool] as number) || 0;
-                stats[statName] += bonus;
+                stats[statName] = (stats[statName] || 0) + bonus;
             });
         });
         return stats;
     }, [baseCharacter, assignedTools]);
 
-    const isLoading = isLoadingAssigned || isLoadingAvailable;
+    const isLoading =
+        isLoadingAssigned || isLoadingAvailable || isLoadingCharacters;
     const hoveredTool = availableTools.find((t) => t.id === hoveredToolId);
 
     if (isLoading || !baseCharacter) {

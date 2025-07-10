@@ -23,10 +23,7 @@ export default function ToolManagementModal({
             title={`${t("tool.managementTitle")} - ${character.name}`}
             size="5xl"
         >
-            <ToolManagement
-                characterId={character.id}
-                baseCharacter={character}
-            />
+            <ToolManagement characterId={character.id} />
         </Modal>
     );
 }
