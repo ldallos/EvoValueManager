@@ -52,5 +52,10 @@ namespace EvoCharacterManager.Services
              return await _context.CharacterTools
                 .AnyAsync(ct => ct.CharacterId == characterId && ct.ToolId == toolId);
         }
+        
+        public async Task<List<CharacterTool>> GetAllAssignmentsAsync()
+        {
+            return await _context.CharacterTools.AsNoTracking().ToListAsync();
+        }
     }
 }

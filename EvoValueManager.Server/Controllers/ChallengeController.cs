@@ -83,7 +83,6 @@ namespace EvoCharacterManager.Controllers
             
             var challenge = new Challenge
             {
-                ID = challengeViewModel.Id,
                 Title = challengeViewModel.Title,
                 RequiredBravery = challengeViewModel.RequiredBravery,
                 RequiredTrust = challengeViewModel.RequiredTrust,
@@ -101,6 +100,7 @@ namespace EvoCharacterManager.Controllers
             
             var createdViewModel = new ChallengeViewModel
             {
+                Id = challenge.ID,
                 Title = challenge.Title,
                 RequiredBravery = challenge.RequiredBravery,
                 RequiredTrust = challenge.RequiredTrust,
@@ -120,7 +120,8 @@ namespace EvoCharacterManager.Controllers
 
         // PUT: api/Challenge/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutChallenge(int id, [FromBody] ChallengeViewModel challengeViewModel)
+        public async Task<ActionResult<ChallengeViewModel>> PutChallenge
+            (int id, [FromBody] ChallengeViewModel challengeViewModel)
         {
             if (id != challengeViewModel.Id)
             {
@@ -154,6 +155,36 @@ namespace EvoCharacterManager.Controllers
 
             await _challengeService.SaveChanges();
 
+            var updatedViewModel = new ChallengeViewModel
+            {
+                Id = challengeToUpdate.ID,
+                Title = challengeToUpdate.Title,
+                RequiredBravery = challengeToUpdate.RequiredBravery,
+                RequiredTrust = challengeToUpdate.RequiredTrust,
+                RequiredPresence = challengeToUpdate.RequiredPresence,
+                RequiredGrowth = challengeToUpdate.RequiredGrowth,
+                RequiredCare = challengeToUpdate.RequiredCare,
+                GainableBravery = challengeToUpdate.GainableBravery,
+                GainableTrust = challengeToUpdate.GainableTrust,
+                GainablePresence = challengeToUpdate.GainablePresence,
+                GainableGrowth = challengeToUpdate.GainableGrowth,
+                GainableCare = challengeToUpdate.GainableCare
+            };
+
+            return Ok(updatedViewModel);
+        }
+        
+        // DELETE: api/Challenge/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteChallenge(int id)
+        {
+            var challenge = await _challengeService.GetChallengeById(id);
+            if (challenge == null)
+            {
+                return NotFound();
+            }
+
+            await _challengeService.DeleteChallengeAsync(id);
             return NoContent();
         }
     }

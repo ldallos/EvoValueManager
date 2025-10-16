@@ -11,7 +11,6 @@ namespace EvoCharacterManager.Services
         {
             myContext = context;
             myChallengeService = challengeService;
-            context.Database.EnsureCreated();
         }
 
         public async Task AssignChallenge(int characterId, int challengeId, int stateId, string? details)
@@ -20,108 +19,59 @@ namespace EvoCharacterManager.Services
                 new Management
                 {
                     CharacterId = characterId,
-                    ChallangeId = challengeId,
-                    State = ManagementPageViewModel.GetStateText(stateId),
+                    ChallengeId = challengeId,
+                    StateId = stateId,
                     Details = details
                 }
             );
+            await myContext.SaveChangesAsync();
         }
 
         public async Task<List<Challenge>> GetAssignedChallenges(int characterId)
         {
-            List<Management> managements = await myContext.Managements
-                .Where(management => management.CharacterId == characterId 
-                    && management.IsClosed != true)  
+            var challenges = await myContext.Managements
+                .Where(m => m.CharacterId == characterId && !m.IsClosed)
+                .Join(
+                    myContext.Challenges,
+                    management => management.ChallengeId,
+                    challenge => challenge.ID,
+                    (management, challenge) => challenge
+                )
                 .ToListAsync();
 
-            List<Challenge> challenges = new List<Challenge>();
-            foreach (Management management in managements)
-            {
-                Challenge? challenge = await myChallengeService.GetChallengeById(management.ChallangeId);
-                if (challenge != null)
-                {
-                    challenges.Add(challenge);
-                }
-            }
-
             return challenges;
-        }
-
-        public async Task<string> GetManagementDetails(int characterId, int challengeId)
-        {
-            var management = await myContext.Managements
-                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallangeId == challengeId);
-
-            return management?.Details ?? string.Empty;
         }
 
         public async Task<Management?> GetManagement(int characterId, int challengeId)
         {
             return await myContext.Managements
-                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallangeId == challengeId);
+                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallengeId == challengeId);
         }
 
-        public async Task RemoveManagement(int characterId, int challengeId)
-        {
-            Management management = await myContext.Managements.SingleAsync(management =>
-                management.CharacterId == characterId && management.ChallangeId == challengeId);
-
-            myContext.Managements.Remove(management);
-        }
-
-        public async Task UpdateManagementDetails(int characterId, int challengeId, string? details)
+        public async Task UpdateManagement(int characterId, int challengeId, int stateId, string? details)
         {
             var managementEntry = await myContext.Managements
-                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallangeId == challengeId);
+                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallengeId == challengeId);
 
             if (managementEntry != null)
             {
+                managementEntry.StateId = stateId;
                 managementEntry.Details = details;
                 await myContext.SaveChangesAsync();
             }
         }
 
-        public async Task UpdateState(int characterId, int challengeId, string state)
-        {
-            var managementEntry = await myContext.Managements
-                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallangeId == challengeId);
-
-            if (managementEntry != null)
-            {
-                managementEntry.State = state;
-                await myContext.SaveChangesAsync();
-            }
-        }
-
-        public async Task<string?> GetState(int characterId, int challengeId)
-        {
-            var managementEntry = await myContext.Managements
-                .FirstOrDefaultAsync(m => m.CharacterId == characterId && m.ChallangeId == challengeId);
-
-            return managementEntry?.State;
-        }
-
-        public async Task SaveChanges()
-        {
-            await myContext.SaveChangesAsync();
-        }
-
         public async Task<List<Challenge>> GetClosedChallenges(int characterId)
         {
-            List<Management> managements = await myContext.Managements
-                .Where(management => management.CharacterId == characterId 
-                    && management.IsClosed == true)
+            List<Challenge> challenges = await myContext.Managements
+                .Where(m => m.CharacterId == characterId && m.IsClosed)
+                .Join(
+                    myContext.Challenges,
+                    management => management.ChallengeId,
+                    challenge => challenge.ID,
+                    (management, challenge) => challenge
+                )
                 .ToListAsync();
-
-            List<Challenge> challenges = new List<Challenge>();
-            foreach (Management management in managements)
-            {
-                Challenge? challenge = await myChallengeService.GetChallengeById(management.ChallangeId);
-                if (challenge != null)
-                {
-                    challenges.Add(challenge);
-                }
-            }
 
             return challenges;
         }

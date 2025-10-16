@@ -9,6 +9,15 @@ namespace EvoCharacterManager.Models.Entities
 
         [Column("name")]
         public string Name { get; set; } = string.Empty;
+        
+        [Column("title")]
+        public string? Title { get; set; }
+
+        [Column("avatar_image")]
+        public byte[]? AvatarImage { get; set; }
+
+        [Column("avatar_image_type")]
+        public string? AvatarImageType { get; set; }
 
         [Column("bravery")] public int Bravery { get; set; } = 0;
 
@@ -19,5 +28,8 @@ namespace EvoCharacterManager.Models.Entities
         [Column("growth")] public int Growth { get; set; } = 0;
 
         [Column("care")] public int Care { get; set; } = 0;
+        
+        public ICollection<CharacterTool> CharacterTools { get; set; } = new List<CharacterTool>();
+        public ICollection<CharacterAchievement> CharacterAchievements { get; set; } = new List<CharacterAchievement>();
     }
 }

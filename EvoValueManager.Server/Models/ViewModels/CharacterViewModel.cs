@@ -6,6 +6,10 @@
 
         public string Name { get; set; } = string.Empty;
 
+        public string? Title { get; set; }
+        
+        public bool HasAvatar { get; set; }
+
         public int Bravery { get; set; } = 1;
 
         public int Trust { get; set; } = 1;
@@ -15,5 +19,7 @@
         public int Growth { get; set; } = 1;
         
         public int Care { get; set; } = 1;
+        
+        public List<ToolViewModel> AppliedTools { get; set; } = new List<ToolViewModel>();
     }
 }

@@ -7,8 +7,12 @@ namespace EvoCharacterManager.Services
         Task<List<Character>> GetAllCharacters();
 
         Task<Character?> GetCharacterById(int id);
+        
+        Task<List<Character>> GetEffectiveCharacters();
 
         Task SaveNewCharacter(Character character);
+        
+        Task DeleteCharacterAsync(int id);
 
         Task SaveChanges();
     }

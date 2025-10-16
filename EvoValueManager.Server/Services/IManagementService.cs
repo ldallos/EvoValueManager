@@ -8,20 +8,10 @@ namespace EvoCharacterManager.Services
 
         Task<List<Challenge>> GetAssignedChallenges(int characterId);
 
-        Task<string> GetManagementDetails(int characterId, int challengeId);
-
         Task<Management?> GetManagement(int characterId, int challengeId);
 
         Task<List<Challenge>> GetClosedChallenges(int characterId);
 
-        Task RemoveManagement(int characterId, int challengeId);
-
-        Task UpdateManagementDetails(int characterId, int challengeId, string? details);
-
-        Task UpdateState(int characterId, int challengeId, string state);
-
-        Task<string?> GetState(int characterId, int challengeId);
-
-        Task SaveChanges();
+        Task UpdateManagement(int characterId, int challengeId, int stateId, string? details);
     }
 }

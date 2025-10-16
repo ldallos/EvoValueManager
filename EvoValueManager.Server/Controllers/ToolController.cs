@@ -123,8 +123,34 @@ namespace EvoCharacterManager.Controllers
             toolToUpdate.GrowthBonus = toolViewModel.GrowthBonus;
             toolToUpdate.CareBonus = toolViewModel.CareBonus;
             
-            await _toolService.SaveChanges(); 
+            await _toolService.SaveChanges();
+            
+            var updatedViewModel = new ToolViewModel
+            {
+                Id = toolToUpdate.Id,
+                Name = toolToUpdate.Name,
+                Description = toolToUpdate.Description,
+                BraveryBonus = toolToUpdate.BraveryBonus,
+                TrustBonus = toolToUpdate.TrustBonus,
+                PresenceBonus = toolToUpdate.PresenceBonus,
+                GrowthBonus = toolToUpdate.GrowthBonus,
+                CareBonus = toolToUpdate.CareBonus
+            };
 
+            return Ok(updatedViewModel);
+        }
+        
+        // DELETE: api/Tool/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTool(int id)
+        {
+            var tool = await _toolService.GetToolById(id);
+            if (tool == null)
+            {
+                return NotFound();
+            }
+
+            await _toolService.DeleteToolAsync(id);
             return NoContent();
         }
     }
